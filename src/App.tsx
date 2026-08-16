@@ -643,9 +643,7 @@ export default function App() {
       <PolicePortalModal
         isOpen={isPolicePortalOpen}
         onClose={() => setIsPolicePortalOpen(false)}
-        authorizedOfficer={authorizedOfficer}
-        onOfficerLoggedIn={(officer) => setAuthorizedOfficer(officer)}
-        onOfficerLoggedOut={() => setAuthorizedOfficer(null)}
+        selectedState={selectedState}
       />
 
       <AISafetyAdvisorModal

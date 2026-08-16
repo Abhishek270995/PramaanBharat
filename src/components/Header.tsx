@@ -15,7 +15,8 @@ import {
   Lock,
   ChevronDown,
   Crown,
-  X
+  X,
+  Building2
 } from 'lucide-react';
 import { StateInfo, DistrictInfo, LanguageCode, NewsCategory, AuthorizedOfficer } from '../types';
 import { AVAILABLE_LANGUAGES } from '../data/communityData';
@@ -347,28 +348,15 @@ export const Header: React.FC<HeaderProps> = ({
               <span>112 SOS</span>
             </button>
 
-            {/* Police / Law Enforcement Authorized Vault Desktop */}
+            {/* Official Police & Citizen Portals Directory Desktop */}
             <button
-              id="police-portal-auth-btn"
+              id="police-directory-btn"
               onClick={onOpenPolicePortal}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                authorizedOfficer 
-                  ? 'bg-slate-900 border-slate-950 text-emerald-400 ring-2 ring-emerald-500/20' 
-                  : 'border-slate-300 bg-slate-900 hover:bg-slate-800 text-white'
-              }`}
-              title="Law Enforcement Official Archive Portal"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
+              title="Official National & State Police Portals, e-FIR, CCTNS & Cyber Crime Reporting"
             >
-              {authorizedOfficer ? (
-                <>
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Officer</span>
-                </>
-              ) : (
-                <>
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Police</span>
-                </>
-              )}
+              <Building2 className="w-3.5 h-3.5 text-blue-400" />
+              <span>Police Portals</span>
             </button>
           </div>
 
