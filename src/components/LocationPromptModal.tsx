@@ -19,12 +19,20 @@ export const LocationPromptModal: React.FC<LocationPromptModalProps> = ({
   const [isDetecting, setIsDetecting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  const handleDismiss = () => {
+    try {
+      localStorage.setItem('pramaan_location_prompt_seen', 'true');
+    } catch {
+      // ignore
+    }
+    onClose();
+  };
 
   const handleAllowLocation = async () => {
     setIsDetecting(true);
     setErrorMessage(null);
     try {
+      localStorage.setItem('pramaan_location_prompt_seen', 'true');
       const result = await requestBrowserLocation(statesList);
       setIsDetecting(false);
       onLocationDetected(result);
@@ -58,7 +66,7 @@ export const LocationPromptModal: React.FC<LocationPromptModalProps> = ({
           </div>
 
           <button
-            onClick={onClose}
+            onClick={handleDismiss}
             className="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-slate-800 transition-colors shrink-0"
             title="Dismiss"
           >
@@ -84,7 +92,7 @@ export const LocationPromptModal: React.FC<LocationPromptModalProps> = ({
           </button>
 
           <button
-            onClick={onClose}
+            onClick={handleDismiss}
             className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-colors cursor-pointer shrink-0"
           >
             Keep All India

@@ -112,6 +112,8 @@ export default function App() {
   useEffect(() => {
     try {
       const savedLocation = localStorage.getItem('pramaan_user_location');
+      const promptSeen = localStorage.getItem('pramaan_location_prompt_seen');
+
       if (savedLocation) {
         const parsed = JSON.parse(savedLocation);
         const matchedState = INDIA_STATES_DATA.find(s => s.id === parsed.stateId);
@@ -122,11 +124,11 @@ export default function App() {
             if (matchedDistrict) setSelectedDistrict(matchedDistrict);
           }
         }
-      } else {
-        // Show polite location prompt on first visit after a brief smooth delay
+      } else if (!promptSeen) {
+        // Show polite location prompt only on first-ever visit
         const timer = setTimeout(() => {
           setIsLocationPromptOpen(true);
-        }, 1200);
+        }, 1500);
         return () => clearTimeout(timer);
       }
     } catch {
