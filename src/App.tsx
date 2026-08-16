@@ -463,6 +463,8 @@ export default function App() {
             <CrimeCategoryAnalytics
               selectedCategory={selectedCrimeCategory}
               onSelectCategory={setSelectedCrimeCategory}
+              selectedState={selectedState}
+              selectedDistrict={selectedDistrict}
               timeKey={timeKey}
               customStartDate={customStartDate}
               customEndDate={customEndDate}

@@ -23,12 +23,14 @@ import {
   ExternalLink,
   ShieldCheck
 } from 'lucide-react';
-import { CrimeCategory, CrimeCategoryStat, TimeRangeKey } from '../types';
+import { CrimeCategory, CrimeCategoryStat, TimeRangeKey, StateInfo, DistrictInfo } from '../types';
 import { getCategoryStatsForTimeframe, getTimeframeMetricsConfig } from '../data/crimeData';
 
 interface CrimeCategoryAnalyticsProps {
   selectedCategory: CrimeCategory | null;
   onSelectCategory: (cat: CrimeCategory | null) => void;
+  selectedState?: StateInfo | null;
+  selectedDistrict?: DistrictInfo | null;
   timeKey: TimeRangeKey;
   customStartDate?: string;
   customEndDate?: string;
@@ -88,15 +90,18 @@ const CATEGORY_HELPLINES_AND_LAWS: Record<CrimeCategory, { helpline: string; hel
 export const CrimeCategoryAnalytics: React.FC<CrimeCategoryAnalyticsProps> = ({
   selectedCategory,
   onSelectCategory,
+  selectedState = null,
+  selectedDistrict = null,
   timeKey,
   customStartDate,
   customEndDate
 }) => {
   const [drilldownCategory, setDrilldownCategory] = useState<CrimeCategoryStat | null>(null);
   const timeframeConfig = getTimeframeMetricsConfig(timeKey, customStartDate, customEndDate);
-  const categoriesData = getCategoryStatsForTimeframe(timeKey, customStartDate, customEndDate);
+  const categoriesData = getCategoryStatsForTimeframe(timeKey, customStartDate, customEndDate, selectedState, selectedDistrict);
 
   const isDaily = timeKey === 'today';
+  const locationTitle = selectedDistrict ? selectedDistrict.name : selectedState ? selectedState.name : 'All India National';
 
   const getCategoryIcon = (name: string) => {
     switch (name) {
@@ -127,16 +132,19 @@ export const CrimeCategoryAnalytics: React.FC<CrimeCategoryAnalyticsProps> = ({
               <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-bold tracking-wider uppercase border border-indigo-200">
                 Crime Categorization &amp; Resolution Engine
               </span>
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-700 bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200">
+                <span>📍 {locationTitle}</span>
+              </span>
               <span className="flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
                 <Calendar className="w-3 h-3 text-indigo-600" />
                 <span>{timeframeConfig.periodName}</span>
               </span>
             </div>
             <h3 className="text-xl font-black text-slate-900 tracking-tight">
-              Incident Breakdown by Crime Category &amp; Police Resolution Rates
+              Incident Breakdown by Crime Category &amp; Police Resolution Rates ({locationTitle})
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              All categories below are actively synchronized with {timeframeConfig.periodName}. Click any card for legal insights, emergency helplines &amp; news filtering.
+              All categories below are actively synchronized with {locationTitle} telemetry for {timeframeConfig.periodName}. Click any card for legal insights, emergency helplines &amp; news filtering.
             </p>
           </div>
 

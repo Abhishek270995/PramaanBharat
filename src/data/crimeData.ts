@@ -1,4 +1,4 @@
-import { CrimeCategory, CrimeCategoryStat, SolvedArchivedCase, LiveSafetyAlert, TimeRangeKey } from '../types';
+import { CrimeCategory, CrimeCategoryStat, SolvedArchivedCase, LiveSafetyAlert, TimeRangeKey, StateInfo, DistrictInfo } from '../types';
 
 export const CRIME_CATEGORIES_DATA: CrimeCategoryStat[] = [
   {
@@ -590,14 +590,24 @@ export const getTimeframeMetricsConfig = (
   return TIMEFRAME_CONFIGS[timeKey as TimeRangeKey] || TIMEFRAME_CONFIGS.ytd;
 };
 
-// Get dynamically calculated Category Statistics for the selected timeframe
+// Get dynamically calculated Category Statistics for the selected timeframe & location
 export const getCategoryStatsForTimeframe = (
   timeKey: TimeRangeKey | string,
   customStartDate?: string,
-  customEndDate?: string
+  customEndDate?: string,
+  selectedState?: StateInfo | null,
+  selectedDistrict?: DistrictInfo | null
 ): CrimeCategoryStat[] => {
   const config = getTimeframeMetricsConfig(timeKey, customStartDate, customEndDate);
   const metricsMap = CATEGORY_TIME_METRICS[timeKey] || CATEGORY_TIME_METRICS.ytd;
+
+  // Base reported scale factor for location relative to national baseline (368,400)
+  let locationFactor = 1.0;
+  if (selectedDistrict) {
+    locationFactor = selectedDistrict.reportedCrimes / 368400;
+  } else if (selectedState) {
+    locationFactor = selectedState.reportedCrimes / 368400;
+  }
 
   return CRIME_CATEGORIES_DATA.map((cat) => {
     const dyn = metricsMap[cat.category] || {
@@ -607,10 +617,11 @@ export const getCategoryStatsForTimeframe = (
       avgDays: cat.averageResolutionDays
     };
 
-    const reported = Math.round(cat.reported * config.multiplier);
-    const verified = Math.round(reported * dyn.verificationRatio);
-    const solved = Math.round(verified * dyn.solveRatio);
-    const archived = Math.round(solved * config.archiveRatio);
+    const baseReported = Math.max(1, Math.round(cat.reported * locationFactor));
+    const reported = Math.max(1, Math.round(baseReported * config.multiplier));
+    const verified = Math.max(1, Math.round(reported * dyn.verificationRatio));
+    const solved = Math.max(1, Math.round(verified * dyn.solveRatio));
+    const archived = Math.max(1, Math.round(solved * config.archiveRatio));
 
     return {
       ...cat,
