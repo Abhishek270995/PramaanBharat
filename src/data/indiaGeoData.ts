@@ -644,6 +644,34 @@ export const INDIA_STATES: StateInfo[] = [
         coordinates: [25.2425, 87.0169]
       },
       {
+        id: 'munger',
+        name: 'Munger',
+        stateId: 'bihar',
+        reportedCrimes: 2840,
+        verifiedCrimes: 2610,
+        solvedCrimes: 2210,
+        archivedCases: 1910,
+        riskLevel: 'Moderate',
+        primaryConcern: 'Illegal Arms Interception & Industrial Safety',
+        policeStationsCount: 19,
+        emergencyHelpline: '06344-222400 / 112',
+        coordinates: [25.3750, 86.4740]
+      },
+      {
+        id: 'jamui',
+        name: 'Jamui',
+        stateId: 'bihar',
+        reportedCrimes: 2300,
+        verifiedCrimes: 2100,
+        solvedCrimes: 1800,
+        archivedCases: 1550,
+        riskLevel: 'Moderate',
+        primaryConcern: 'Interstate Border Patrol & Forest Area Security',
+        policeStationsCount: 16,
+        emergencyHelpline: '06345-222200 / 112',
+        coordinates: [24.9203, 86.2238]
+      },
+      {
         id: 'patna',
         name: 'Patna Metropolitan',
         stateId: 'bihar',
@@ -714,20 +742,6 @@ export const INDIA_STATES: StateInfo[] = [
         coordinates: [25.7771, 87.4753]
       },
       {
-        id: 'munger',
-        name: 'Munger',
-        stateId: 'bihar',
-        reportedCrimes: 2840,
-        verifiedCrimes: 2610,
-        solvedCrimes: 2210,
-        archivedCases: 1910,
-        riskLevel: 'Moderate',
-        primaryConcern: 'Illegal Arms Interception & Industrial Safety',
-        policeStationsCount: 19,
-        emergencyHelpline: '06344-222400 / 112',
-        coordinates: [25.3750, 86.4740]
-      },
-      {
         id: 'begusarai',
         name: 'Begusarai',
         stateId: 'bihar',
@@ -740,6 +754,62 @@ export const INDIA_STATES: StateInfo[] = [
         policeStationsCount: 20,
         emergencyHelpline: '06243-222100 / 112',
         coordinates: [25.4182, 86.1272]
+      },
+      {
+        id: 'nalanda',
+        name: 'Nalanda (Bihar Sharif)',
+        stateId: 'bihar',
+        reportedCrimes: 3600,
+        verifiedCrimes: 3350,
+        solvedCrimes: 2900,
+        archivedCases: 2500,
+        riskLevel: 'Low',
+        primaryConcern: 'Tourist Heritage Route Security & Rural Property Disputes',
+        policeStationsCount: 23,
+        emergencyHelpline: '06112-235200 / 112',
+        coordinates: [25.1979, 85.5186]
+      },
+      {
+        id: 'saran',
+        name: 'Saran (Chhapra)',
+        stateId: 'bihar',
+        reportedCrimes: 3400,
+        verifiedCrimes: 3100,
+        solvedCrimes: 2650,
+        archivedCases: 2250,
+        riskLevel: 'Moderate',
+        primaryConcern: 'Riverine Border Patrol & Highway Vehicle Thefts',
+        policeStationsCount: 22,
+        emergencyHelpline: '06152-245100 / 112',
+        coordinates: [25.7836, 84.7466]
+      },
+      {
+        id: 'katihar',
+        name: 'Katihar',
+        stateId: 'bihar',
+        reportedCrimes: 2950,
+        verifiedCrimes: 2700,
+        solvedCrimes: 2300,
+        archivedCases: 1950,
+        riskLevel: 'Moderate',
+        primaryConcern: 'Railway Junction Transshipment Security & Cyber Fraud',
+        policeStationsCount: 19,
+        emergencyHelpline: '06452-239100 / 112',
+        coordinates: [25.5414, 87.5709]
+      },
+      {
+        id: 'nawada',
+        name: 'Nawada',
+        stateId: 'bihar',
+        reportedCrimes: 2450,
+        verifiedCrimes: 2250,
+        solvedCrimes: 1900,
+        archivedCases: 1600,
+        riskLevel: 'Low',
+        primaryConcern: 'Sand Mining Regulation & Rural Safety Grievances',
+        policeStationsCount: 16,
+        emergencyHelpline: '06324-212200 / 112',
+        coordinates: [24.8872, 85.5417]
       }
     ]
   },
