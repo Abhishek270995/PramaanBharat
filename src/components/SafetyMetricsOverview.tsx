@@ -116,104 +116,109 @@ export const SafetyMetricsOverview: React.FC<SafetyMetricsOverviewProps> = ({
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6">
         
         {/* Metric 1: Reported Crimes */}
-        <div className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-4 transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Total Reported Crimes</span>
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20">
-              <FileText className="w-4 h-4" />
+        <div className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 sm:p-4 transition-all group flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-400 truncate">Reported Crimes</span>
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0">
+                <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+            </div>
+            <div className="mt-2 sm:mt-3 flex flex-wrap items-baseline gap-1.5">
+              <span className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight">
+                {formatNum(reported)}
+              </span>
+              <span className={`text-[10px] sm:text-[11px] font-bold flex items-center px-1.5 py-0.5 rounded ${
+                isPositiveTrend 
+                  ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' 
+                  : 'text-rose-400 bg-rose-500/10 border border-rose-500/20'
+              }`}>
+                {isPositiveTrend ? <TrendingDown className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5" /> : <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5" />}
+                {config.yoyLabel}
+              </span>
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              {formatNum(reported)}
-            </span>
-            <span className={`text-[11px] font-bold flex items-center px-1.5 py-0.5 rounded ${
-              isPositiveTrend 
-                ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' 
-                : 'text-rose-400 bg-rose-500/10 border border-rose-500/20'
-            }`}>
-              {isPositiveTrend ? <TrendingDown className="w-3 h-3 mr-0.5" /> : <TrendingUp className="w-3 h-3 mr-0.5" />}
-              {config.yoyLabel}
-            </span>
-          </div>
-          <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-slate-700/60">
-            <span>{config.comparisonWindow}</span>
-            <span className="text-blue-400 font-medium">100% Monitored</span>
+          <div className="mt-2 text-[10px] sm:text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-slate-700/60">
+            <span className="truncate">{config.comparisonWindow}</span>
+            <span className="text-blue-400 font-medium shrink-0">Monitored</span>
           </div>
         </div>
 
         {/* Metric 2: Verified by Police */}
-        <div className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-4 transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Verified & FIR Registered</span>
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20">
-              <ShieldCheck className="w-4 h-4" />
+        <div className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 sm:p-4 transition-all group flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-400 truncate">Verified & FIR</span>
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
+                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+            </div>
+            <div className="mt-2 sm:mt-3 flex flex-wrap items-baseline gap-1.5">
+              <span className="text-xl sm:text-2xl lg:text-3xl font-black text-amber-300 tracking-tight">
+                {formatNum(verified)}
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-bold text-amber-200 bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/30">
+                {verificationRate}%
+              </span>
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-amber-300 tracking-tight">
-              {formatNum(verified)}
-            </span>
-            <span className="text-[11px] font-bold text-amber-200 bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/30">
-              {verificationRate}% verified
-            </span>
-          </div>
-          <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-slate-700/60">
-            <span>Investigating: {formatNum(activeInvestigating)}</span>
-            <span className="text-amber-400 font-medium">{config.lawFramework}</span>
+          <div className="mt-2 text-[10px] sm:text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-slate-700/60">
+            <span className="truncate">Active: {formatNum(activeInvestigating)}</span>
+            <span className="text-amber-400 font-medium shrink-0">{config.lawFramework.split(' ')[0]}</span>
           </div>
         </div>
 
         {/* Metric 3: Solved by Police */}
-        <div className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-4 transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Solved by Police</span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20">
-              <CheckCircle2 className="w-4 h-4" />
+        <div className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 sm:p-4 transition-all group flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-400 truncate">Solved by Police</span>
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">
+                <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+            </div>
+            <div className="mt-2 sm:mt-3 flex flex-wrap items-baseline gap-1.5">
+              <span className="text-xl sm:text-2xl lg:text-3xl font-black text-emerald-400 tracking-tight">
+                {formatNum(solved)}
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-bold text-emerald-200 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 flex items-center">
+                <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 text-emerald-300" />
+                {solveRate}%
+              </span>
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">
-              {formatNum(solved)}
-            </span>
-            <span className="text-[11px] font-bold text-emerald-200 bg-emerald-500/20 px-1.5 py-0.5 rounded border border-emerald-500/30 flex items-center">
-              <TrendingUp className="w-3 h-3 mr-0.5 text-emerald-300" />
-              {solveRate}% Solved
-            </span>
-          </div>
-          <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-slate-700/60">
-            <span>Chargesheet filed & accused held</span>
-            <span className="text-emerald-400 font-medium">{config.chargesheetSpeed}</span>
+          <div className="mt-2 text-[10px] sm:text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-slate-700/60">
+            <span className="truncate">Chargesheet velocity</span>
+            <span className="text-emerald-400 font-medium shrink-0">{config.chargesheetSpeed}</span>
           </div>
         </div>
 
         {/* Metric 4: Closed & Archived in Database */}
-        <div className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-4 transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400">Closed & Archived Cases</span>
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20">
-              <Archive className="w-4 h-4" />
+        <div className="bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl p-3.5 sm:p-4 transition-all group flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-400 truncate">Archived Cases</span>
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center border border-indigo-500/20 shrink-0">
+                <Archive className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+            </div>
+            <div className="mt-2 sm:mt-3 flex flex-wrap items-baseline gap-1.5">
+              <span className="text-xl sm:text-2xl lg:text-3xl font-black text-indigo-300 tracking-tight">
+                {formatNum(archived)}
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-bold text-indigo-200 bg-indigo-500/20 px-1.5 py-0.5 rounded border border-indigo-500/30">
+                {archiveRate}%
+              </span>
             </div>
           </div>
-          <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-indigo-300 tracking-tight">
-              {formatNum(archived)}
-            </span>
-            <span className="text-[11px] font-bold text-indigo-200 bg-indigo-500/20 px-1.5 py-0.5 rounded border border-indigo-500/30">
-              {archiveRate}% Archived
-            </span>
-          </div>
-          <div className="mt-2 text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-slate-700/60">
-            <span>Court convictions & recoveries</span>
-            <span className="text-indigo-400 font-medium flex items-center gap-0.5">
-              <Lock className="w-3 h-3" /> Secure Vault
-            </span>
+          <div className="mt-2 text-[10px] sm:text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-slate-700/60">
+            <span className="truncate">Court closures</span>
+            <span className="text-indigo-400 font-medium shrink-0">Vault Log</span>
           </div>
         </div>
-
       </div>
 
       {/* Progress Bar & Crime Closure Lifecycle */}
