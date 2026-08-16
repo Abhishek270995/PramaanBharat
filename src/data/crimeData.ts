@@ -254,6 +254,36 @@ export const SOLVED_ARCHIVED_CASES: SolvedArchivedCase[] = [
 
 export const LIVE_SAFETY_ALERTS: LiveSafetyAlert[] = [
   {
+    id: 'ALERT-BR-01',
+    title: 'Bihar Police & Banka District Advisory: Fraudulent KCC Loan & DBT Subsidy Calls',
+    description: 'Cyber fraudsters targeting farmers and citizens across Banka, Bhagalpur & Munger with fake Kisan Credit Card subsidy approvals requiring screen-sharing apps. Report suspicious calls to 1930 / 112 immediately.',
+    severity: 'Critical',
+    stateId: 'bihar',
+    districtId: 'banka',
+    locationName: 'Banka, Bhagalpur & Munger (Bihar)',
+    issuedBy: 'Bihar Police Cyber Crime Wing & Banka SP Office',
+    timestamp: '10 mins ago',
+    expiresAt: 'Active Advisory for next 72 hours',
+    category: 'Cybercrime & Online Fraud',
+    activeHelpline: '1930 (National Cybercrime) / 06424-222233',
+    isPinned: false
+  },
+  {
+    id: 'ALERT-BR-02',
+    title: 'Patna Traffic Police Advisory: Bailey Road & Dak Bungalow Junction Diversion',
+    description: 'Emergency smart city metro utility upgrade on Bailey Road stretch. Heavy vehicles diverted via Digha-AIIMS elevated corridor. Commuters advised to plan peak hour travel accordingly.',
+    severity: 'Warning',
+    stateId: 'bihar',
+    districtId: 'patna',
+    locationName: 'Bailey Road Corridor, Patna',
+    issuedBy: 'Patna Traffic Police Control Room',
+    timestamp: '35 mins ago',
+    expiresAt: 'Valid till 23:00 IST',
+    category: 'Traffic Hazard',
+    activeHelpline: '0612-2201977 / 112',
+    isPinned: false
+  },
+  {
     id: 'ALERT-01',
     title: 'Delhi NCR Cyber Cell Red Advisory: Fraudulent Traffic Challan APK Messages',
     description: 'Spam SMS claiming "Pending e-Challan payment for vehicle DL-XX" with link to malicious .apk file stealing SMS OTPs. Do NOT install unknown APK files. Use only echallan.parivahan.gov.in.',
@@ -266,7 +296,7 @@ export const LIVE_SAFETY_ALERTS: LiveSafetyAlert[] = [
     expiresAt: 'Active for next 48 hours',
     category: 'Cybercrime & Online Fraud',
     activeHelpline: '1930 (National Cybercrime)',
-    isPinned: true
+    isPinned: false
   },
   {
     id: 'ALERT-02',

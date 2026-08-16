@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AlertCircle, AlertTriangle, Info, Volume2, VolumeX, ShieldAlert, Phone, ExternalLink, ChevronRight } from 'lucide-react';
-import { LiveSafetyAlert, StateInfo } from '../types';
+import { LiveSafetyAlert, StateInfo, DistrictInfo } from '../types';
 
 interface LiveAlertsTickerProps {
   alerts: LiveSafetyAlert[];
   selectedState: StateInfo | null;
+  selectedDistrict?: DistrictInfo | null;
   onSelectAlert: (alert: LiveSafetyAlert) => void;
   onOpenEmergencyModal: () => void;
 }
@@ -12,18 +13,36 @@ interface LiveAlertsTickerProps {
 export const LiveAlertsTicker: React.FC<LiveAlertsTickerProps> = ({
   alerts,
   selectedState,
+  selectedDistrict,
   onSelectAlert,
   onOpenEmergencyModal
 }) => {
   const [activeAlertIndex, setActiveAlertIndex] = useState<number>(0);
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
 
-  // Filter alerts if state is selected
-  const filteredAlerts = selectedState 
-    ? alerts.filter(a => a.stateId === selectedState.id || a.stateId === 'all-india' || a.isPinned)
-    : alerts;
+  // Filter alerts with priority for user's selected district, then selected state, then general
+  const filteredAlerts = useMemo(() => {
+    if (selectedDistrict) {
+      const districtAlerts = alerts.filter(a => a.districtId === selectedDistrict.id);
+      if (districtAlerts.length > 0) return districtAlerts;
+    }
+    if (selectedState) {
+      const stateAlerts = alerts.filter(a => a.stateId === selectedState.id);
+      if (stateAlerts.length > 0) return stateAlerts;
+    }
+    return alerts;
+  }, [alerts, selectedState, selectedDistrict]);
 
-  const currentAlert = filteredAlerts[activeAlertIndex] || alerts[0];
+  // Reset index when location changes
+  useEffect(() => {
+    setActiveAlertIndex(0);
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  }, [selectedState, selectedDistrict]);
+
+  const currentAlert = filteredAlerts[activeAlertIndex] || filteredAlerts[0] || alerts[0];
 
   const handleSpeakAlert = (e: React.MouseEvent) => {
     e.stopPropagation();

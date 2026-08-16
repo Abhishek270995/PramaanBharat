@@ -316,6 +316,7 @@ export default function App() {
       <LiveAlertsTicker
         alerts={LIVE_SAFETY_ALERTS}
         selectedState={selectedState}
+        selectedDistrict={selectedDistrict}
         onSelectAlert={handleSelectAlert}
         onOpenEmergencyModal={() => setIsEmergencyModalOpen(true)}
       />
