@@ -59,7 +59,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
   selectedDistrict,
   selectedCrimeCategory,
   searchQuery,
-  timeKey = 'ytd',
+  timeKey = 'today',
   customStartDate,
   customEndDate,
   onChangeTimeKey,

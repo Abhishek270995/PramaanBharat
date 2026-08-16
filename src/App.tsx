@@ -76,7 +76,7 @@ export default function App() {
   // State variables
   const [selectedState, setSelectedState] = useState<StateInfo | null>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictInfo | null>(null);
-  const [timeKey, setTimeKey] = useState<TimeRangeKey>('ytd');
+  const [timeKey, setTimeKey] = useState<TimeRangeKey>('today');
   const [customStartDate, setCustomStartDate] = useState<string>('2026-08-01');
   const [customEndDate, setCustomEndDate] = useState<string>('2026-08-15');
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>('en');
@@ -219,7 +219,7 @@ export default function App() {
   const handleResetFilters = () => {
     setSelectedState(null);
     setSelectedDistrict(null);
-    setTimeKey('ytd');
+    setTimeKey('today');
     setSelectedCrimeCategory(null);
     setActiveCategory('All');
     setSearchQuery('');

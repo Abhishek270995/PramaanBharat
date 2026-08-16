@@ -49,7 +49,7 @@ export const DateFilterBar: React.FC<DateFilterBarProps> = ({
     setShowCustomModal(false);
   };
 
-  const hasActiveFilters = selectedState !== null || selectedDistrict !== null || timeKey !== 'ytd';
+  const hasActiveFilters = selectedState !== null || selectedDistrict !== null || timeKey !== 'today';
 
   return (
     <div className="bg-white border-b border-slate-200 py-3 shadow-2xs">
