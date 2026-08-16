@@ -45,10 +45,16 @@ import {
   SubscriptionModal 
 } from './components/SubscriptionModal';
 import { 
+  LocationPromptModal 
+} from './components/LocationPromptModal';
+import { 
   UserSubscription, 
   getSubscriptionState, 
   consumeAiCredit 
 } from './utils/subscriptionUtils';
+import { 
+  LocationDetectionResult 
+} from './utils/geolocationUtils';
 
 import { 
   StateInfo, 
@@ -64,7 +70,7 @@ import {
 import { INDIA_STATES_DATA } from './data/indiaGeoData';
 import { LIVE_SAFETY_ALERTS } from './data/crimeData';
 import { NEWS_ARTICLES } from './data/newsData';
-import { Shield, Sparkles, MapPin, Archive, MessageSquare, Newspaper, Heart, ChevronUp, Lock } from 'lucide-react';
+import { Shield, Sparkles, MapPin, Archive, MessageSquare, Newspaper, Heart, ChevronUp, Lock, CheckCircle2, X } from 'lucide-react';
 
 export default function App() {
   // State variables
@@ -99,6 +105,51 @@ export default function App() {
   const [isPersonalizeModalOpen, setIsPersonalizeModalOpen] = useState<boolean>(false);
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState<boolean>(false);
   const [selectedArticleForModal, setSelectedArticleForModal] = useState<NewsArticle | null>(null);
+  const [isLocationPromptOpen, setIsLocationPromptOpen] = useState<boolean>(false);
+  const [locationToast, setLocationToast] = useState<{ message: string; region: string } | null>(null);
+
+  // Auto-detect or restore saved location on initial visit
+  useEffect(() => {
+    try {
+      const savedLocation = localStorage.getItem('pramaan_user_location');
+      if (savedLocation) {
+        const parsed = JSON.parse(savedLocation);
+        const matchedState = INDIA_STATES_DATA.find(s => s.id === parsed.stateId);
+        if (matchedState) {
+          setSelectedState(matchedState);
+          if (parsed.districtId && matchedState.districts) {
+            const matchedDistrict = matchedState.districts.find(d => d.id === parsed.districtId);
+            if (matchedDistrict) setSelectedDistrict(matchedDistrict);
+          }
+        }
+      } else {
+        // Show polite location prompt on first visit after a brief smooth delay
+        const timer = setTimeout(() => {
+          setIsLocationPromptOpen(true);
+        }, 1200);
+        return () => clearTimeout(timer);
+      }
+    } catch {
+      // Ignore storage error
+    }
+  }, []);
+
+  const handleLocationDetected = (result: LocationDetectionResult) => {
+    setSelectedState(result.state);
+    if (result.district) {
+      setSelectedDistrict(result.district);
+    } else {
+      setSelectedDistrict(null);
+    }
+    const regionName = result.district ? `${result.district.name}, ${result.state.name}` : result.state.name;
+    setLocationToast({
+      message: 'Feed synchronized for your area',
+      region: regionName
+    });
+    setTimeout(() => {
+      setLocationToast(null);
+    }, 5000);
+  };
 
   // Sync subscription updates across windows / events
   useEffect(() => {
@@ -256,6 +307,7 @@ export default function App() {
         bookmarkedCount={bookmarkedIds.length}
         onToggleBookmarksView={() => setIsBookmarksView(!isBookmarksView)}
         isBookmarksView={isBookmarksView}
+        onOpenLocationPrompt={() => setIsLocationPromptOpen(true)}
       />
 
       {/* 2. Live Safety Alerts Real-Time Ticker */}
@@ -598,6 +650,36 @@ export default function App() {
         subscription={subscription}
         onSubscriptionChanged={(newSub) => setSubscription(newSub)}
       />
+
+      <LocationPromptModal
+        isOpen={isLocationPromptOpen}
+        onClose={() => setIsLocationPromptOpen(false)}
+        statesList={INDIA_STATES_DATA}
+        onLocationDetected={handleLocationDetected}
+      />
+
+      {/* Floating Auto-Location Sync Confirmation Toast */}
+      {locationToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 max-w-md w-[calc(100%-32px)]">
+          <div className="bg-slate-900/95 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-2xl border border-emerald-500/40 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-emerald-400">{locationToast.message}</span>
+                <span className="text-[11px] text-slate-300 font-medium">📍 {locationToast.region}</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setLocationToast(null)}
+              className="text-slate-400 hover:text-white p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

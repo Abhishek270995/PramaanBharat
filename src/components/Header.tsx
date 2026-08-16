@@ -43,6 +43,7 @@ interface HeaderProps {
   bookmarkedCount: number;
   onToggleBookmarksView: () => void;
   isBookmarksView: boolean;
+  onOpenLocationPrompt?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -66,7 +67,8 @@ export const Header: React.FC<HeaderProps> = ({
   subscription,
   bookmarkedCount,
   onToggleBookmarksView,
-  isBookmarksView
+  isBookmarksView,
+  onOpenLocationPrompt
 }) => {
   const [istTime, setIstTime] = useState<string>('');
   const [showLangDropdown, setShowLangDropdown] = useState<boolean>(false);
@@ -241,6 +243,19 @@ export const Header: React.FC<HeaderProps> = ({
                       Reset (National)
                     </button>
                   </div>
+
+                  {onOpenLocationPrompt && (
+                    <button
+                      onClick={() => {
+                        setShowLocationDropdown(false);
+                        onOpenLocationPrompt();
+                      }}
+                      className="w-full text-left px-3 py-2 flex items-center gap-2 text-blue-700 bg-blue-50/80 hover:bg-blue-100 font-bold border-b border-blue-100 transition-colors cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+                      <span>⚡ Auto-Detect My Location</span>
+                    </button>
+                  )}
                   
                   <button
                     onClick={() => { onSelectState(null); onSelectDistrict(null); setShowLocationDropdown(false); }}
@@ -440,6 +455,20 @@ export const Header: React.FC<HeaderProps> = ({
                       Reset to All India
                     </button>
                   </div>
+
+                  {onOpenLocationPrompt && (
+                    <button
+                      onClick={() => {
+                        setShowLocationDropdown(false);
+                        onOpenLocationPrompt();
+                      }}
+                      className="w-full text-left px-3 py-2 flex items-center gap-2 text-blue-700 bg-blue-50/80 font-bold border-b border-blue-100 transition-colors"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+                      <span>⚡ Auto-Detect My Location</span>
+                    </button>
+                  )}
+
                   <button
                     onClick={() => { onSelectState(null); onSelectDistrict(null); setShowLocationDropdown(false); }}
                     className={`w-full text-left px-3 py-2 flex items-center gap-2 ${!selectedState ? 'text-blue-600 bg-blue-50 font-bold' : 'text-slate-700'}`}
