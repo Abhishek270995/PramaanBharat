@@ -1816,6 +1816,144 @@ export const INDIA_STATES: StateInfo[] = [
         coordinates: [21.1904, 81.2849]
       }
     ]
+  },
+  {
+    id: 'jammu-kashmir',
+    name: 'Jammu & Kashmir',
+    hindiName: 'जम्मू और कश्मीर',
+    code: 'JK',
+    capital: 'Srinagar / Jammu',
+    zone: 'North',
+    reportedCrimes: 16400,
+    verifiedCrimes: 15100,
+    solvedCrimes: 13200,
+    archivedCases: 11000,
+    riskLevel: 'Moderate',
+    primaryConcern: 'Tourist Corridor Safety & Border Highway Surveillance',
+    policeHeadquarters: 'J&K Police Headquarters, Peerbagh, Srinagar',
+    centerCoordinates: [33.7782, 76.5762],
+    districts: [
+      {
+        id: 'srinagar',
+        name: 'Srinagar',
+        stateId: 'jammu-kashmir',
+        reportedCrimes: 5200,
+        verifiedCrimes: 4800,
+        solvedCrimes: 4200,
+        archivedCases: 3600,
+        riskLevel: 'Low',
+        primaryConcern: 'Tourism Safety, Dal Lake Patrol & Traffic Management',
+        policeStationsCount: 22,
+        emergencyHelpline: '0194-2452092 / 112',
+        coordinates: [34.0837, 74.7973]
+      },
+      {
+        id: 'jammu',
+        name: 'Jammu',
+        stateId: 'jammu-kashmir',
+        reportedCrimes: 5800,
+        verifiedCrimes: 5400,
+        solvedCrimes: 4700,
+        archivedCases: 4000,
+        riskLevel: 'Low',
+        primaryConcern: 'Pilgrim Route Security & Highway Checkposts',
+        policeStationsCount: 24,
+        emergencyHelpline: '0191-2542000 / 112',
+        coordinates: [32.7266, 74.8570]
+      }
+    ]
+  },
+  {
+    id: 'himachal-pradesh',
+    name: 'Himachal Pradesh',
+    hindiName: 'हिमाचल प्रदेश',
+    code: 'HP',
+    capital: 'Shimla',
+    zone: 'North',
+    reportedCrimes: 12100,
+    verifiedCrimes: 11400,
+    solvedCrimes: 10200,
+    archivedCases: 8900,
+    riskLevel: 'Low',
+    primaryConcern: 'High Altitude Highway Safety & Tourist Verification',
+    policeHeadquarters: 'HP Police Headquarters, Nigam Vihar, Shimla',
+    centerCoordinates: [31.1048, 77.1734],
+    districts: [
+      {
+        id: 'shimla',
+        name: 'Shimla',
+        stateId: 'himachal-pradesh',
+        reportedCrimes: 3800,
+        verifiedCrimes: 3600,
+        solvedCrimes: 3200,
+        archivedCases: 2800,
+        riskLevel: 'Low',
+        primaryConcern: 'Mall Road Crowd Management & Winter Road Safety',
+        policeStationsCount: 16,
+        emergencyHelpline: '0177-2803100 / 112',
+        coordinates: [31.1048, 77.1734]
+      },
+      {
+        id: 'kullu-manali',
+        name: 'Kullu (Manali)',
+        stateId: 'himachal-pradesh',
+        reportedCrimes: 2900,
+        verifiedCrimes: 2700,
+        solvedCrimes: 2400,
+        archivedCases: 2100,
+        riskLevel: 'Low',
+        primaryConcern: 'River Rafting & Adventure Tourism Safety',
+        policeStationsCount: 14,
+        emergencyHelpline: '01902-222775 / 112',
+        coordinates: [31.9579, 77.1095]
+      }
+    ]
+  },
+  {
+    id: 'goa',
+    name: 'Goa',
+    hindiName: 'गोवा',
+    code: 'GA',
+    capital: 'Panaji',
+    zone: 'West',
+    reportedCrimes: 4900,
+    verifiedCrimes: 4600,
+    solvedCrimes: 4100,
+    archivedCases: 3700,
+    riskLevel: 'Low',
+    primaryConcern: 'Coastal Tourism Security & Night Life Safety Patrol',
+    policeHeadquarters: 'Goa Police HQ, Altinho, Panaji',
+    centerCoordinates: [15.2993, 74.1240],
+    districts: [
+      {
+        id: 'north-goa',
+        name: 'North Goa (Panaji / Calangute)',
+        stateId: 'goa',
+        reportedCrimes: 2800,
+        verifiedCrimes: 2600,
+        solvedCrimes: 2300,
+        archivedCases: 2100,
+        riskLevel: 'Low',
+        primaryConcern: 'Beach Safety, Night Patrol & Foreign Tourist Verification',
+        policeStationsCount: 15,
+        emergencyHelpline: '0832-2413600 / 112',
+        coordinates: [15.4989, 73.8278]
+      },
+      {
+        id: 'south-goa',
+        name: 'South Goa (Margao)',
+        stateId: 'goa',
+        reportedCrimes: 2100,
+        verifiedCrimes: 2000,
+        solvedCrimes: 1800,
+        archivedCases: 1600,
+        riskLevel: 'Low',
+        primaryConcern: 'Harbor & Marine Patrol',
+        policeStationsCount: 12,
+        emergencyHelpline: '0832-2731100 / 112',
+        coordinates: [15.2832, 73.9862]
+      }
+    ]
   }
 ];
 
