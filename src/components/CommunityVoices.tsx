@@ -15,15 +15,18 @@ import {
 } from 'lucide-react';
 import { CommunityTopic, StateInfo, DistrictInfo } from '../types';
 import { COMMUNITY_TOPICS } from '../data/communityData';
+import { UserSubscription } from '../utils/subscriptionUtils';
 
 interface CommunityVoicesProps {
   selectedState: StateInfo | null;
   selectedDistrict: DistrictInfo | null;
+  subscription?: UserSubscription;
 }
 
 export const CommunityVoices: React.FC<CommunityVoicesProps> = ({
   selectedState,
-  selectedDistrict
+  selectedDistrict,
+  subscription
 }) => {
   const [topics, setTopics] = useState<CommunityTopic[]>(COMMUNITY_TOPICS);
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
@@ -66,7 +69,10 @@ export const CommunityVoices: React.FC<CommunityVoicesProps> = ({
       // Call Gemini AI classification
       const res = await fetch('/api/gemini/classify-report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-pro-token': subscription?.authToken || ''
+        },
         body: JSON.stringify({
           title: newTitle,
           description: newDescription,

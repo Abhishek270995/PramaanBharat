@@ -10,9 +10,11 @@ import {
   Phone, 
   RefreshCw,
   Clock,
-  Compass
+  Compass,
+  Crown
 } from 'lucide-react';
 import { StateInfo, DistrictInfo, AISafetyBriefing } from '../types';
+import { UserSubscription, consumeAiCredit } from '../utils/subscriptionUtils';
 
 interface AISafetyAdvisorModalProps {
   isOpen: boolean;
@@ -20,6 +22,8 @@ interface AISafetyAdvisorModalProps {
   selectedState: StateInfo | null;
   selectedDistrict: DistrictInfo | null;
   onOpenEmergencyModal: () => void;
+  onOpenSubscriptionModal?: () => void;
+  subscription?: UserSubscription;
 }
 
 export const AISafetyAdvisorModal: React.FC<AISafetyAdvisorModalProps> = ({
@@ -27,7 +31,9 @@ export const AISafetyAdvisorModal: React.FC<AISafetyAdvisorModalProps> = ({
   onClose,
   selectedState,
   selectedDistrict,
-  onOpenEmergencyModal
+  onOpenEmergencyModal,
+  onOpenSubscriptionModal,
+  subscription
 }) => {
   const [briefing, setBriefing] = useState<AISafetyBriefing | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -36,14 +42,28 @@ export const AISafetyAdvisorModal: React.FC<AISafetyAdvisorModalProps> = ({
   const regionName = selectedDistrict ? `${selectedDistrict.name}, ${selectedState?.name}` : 
                      selectedState ? selectedState.name : 'National Overview (All India)';
 
-  const fetchBriefing = async () => {
+  const fetchBriefing = async (isManualRefresh: boolean = false) => {
+    if (isManualRefresh) {
+      const creditCheck = consumeAiCredit();
+      if (!creditCheck.success) {
+        if (onOpenSubscriptionModal) {
+          onClose();
+          onOpenSubscriptionModal();
+        }
+        return;
+      }
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await fetch('/api/gemini/safety-briefing', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-pro-token': subscription?.authToken || ''
+        },
         body: JSON.stringify({
           stateName: selectedState?.name || 'All India',
           districtName: selectedDistrict?.name,
@@ -55,6 +75,14 @@ export const AISafetyAdvisorModal: React.FC<AISafetyAdvisorModalProps> = ({
           }
         })
       });
+
+      if (response.status === 429) {
+        if (onOpenSubscriptionModal) {
+          onClose();
+          onOpenSubscriptionModal();
+          return;
+        }
+      }
 
       const data = await response.json();
       if (response.ok && data.briefing) {

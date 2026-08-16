@@ -1,11 +1,116 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(express.json());
+
+// --- IN-MEMORY CACHE (TTL 30 mins) ---
+interface CacheEntry {
+  data: any;
+  timestamp: number;
+}
+const cacheStore = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+const getFromCache = (key: string) => {
+  const item = cacheStore.get(key);
+  if (!item) return null;
+  if (Date.now() - item.timestamp > CACHE_TTL_MS) {
+    cacheStore.delete(key);
+    return null;
+  }
+  return item.data;
+};
+
+const setInCache = (key: string, data: any) => {
+  // Prune cache if too large
+  if (cacheStore.size > 500) {
+    const oldestKey = cacheStore.keys().next().value;
+    if (oldestKey) cacheStore.delete(oldestKey);
+  }
+  cacheStore.set(key, { data, timestamp: Date.now() });
+};
+
+// --- RATE LIMITING & ABUSE PROTECTION ---
+interface IpQuotaRecord {
+  requestsToday: number;
+  lastReset: number;
+  minuteBurst: number;
+  minuteReset: number;
+}
+const ipQuotaStore = new Map<string, IpQuotaRecord>();
+const FREE_DAILY_LIMIT = 5; // Max 5 direct AI requests per IP per day for free users
+const BURST_LIMIT_PER_MINUTE = 8; // Max 8 requests per minute to prevent DDOS
+
+const getClientIp = (req: Request): string => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.ip || req.socket.remoteAddress || '127.0.0.1';
+};
+
+const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const ip = getClientIp(req);
+  const proToken = req.headers['x-pro-token'] as string;
+  const isPro = Boolean(proToken && proToken.startsWith('PRO-'));
+  const now = Date.now();
+
+  let record = ipQuotaStore.get(ip);
+  if (!record) {
+    record = {
+      requestsToday: 0,
+      lastReset: now,
+      minuteBurst: 0,
+      minuteReset: now
+    };
+    ipQuotaStore.set(ip, record);
+  }
+
+  // Reset 1-minute burst counter
+  if (now - record.minuteReset > 60 * 1000) {
+    record.minuteBurst = 0;
+    record.minuteReset = now;
+  }
+
+  // Reset 24-hour daily quota
+  if (now - record.lastReset > 24 * 60 * 60 * 1000) {
+    record.requestsToday = 0;
+    record.lastReset = now;
+  }
+
+  // Check burst limit
+  record.minuteBurst += 1;
+  if (record.minuteBurst > BURST_LIMIT_PER_MINUTE) {
+    return res.status(429).json({
+      error: "Rate limit exceeded",
+      message: "Too many requests. Please wait a minute before making another AI request.",
+      retryAfterSeconds: 60
+    });
+  }
+
+  // Check daily limit for free users
+  if (!isPro) {
+    if (record.requestsToday >= FREE_DAILY_LIMIT) {
+      return res.status(429).json({
+        error: "Daily AI Quota Reached",
+        message: "You have used all free AI credits for today. Upgrade to Pramaan Pro (₹99/mo) for unlimited AI briefings and real-time news.",
+        upgradeRequired: true,
+        remainingCredits: 0
+      });
+    }
+    record.requestsToday += 1;
+  }
+
+  res.setHeader('X-RateLimit-Limit', isPro ? 'Unlimited' : String(FREE_DAILY_LIMIT));
+  res.setHeader('X-RateLimit-Remaining', isPro ? '9999' : String(Math.max(0, FREE_DAILY_LIMIT - record.requestsToday)));
+
+  next();
+};
 
 // Initialize Gemini SDK with telemetry header
 const getGeminiClient = () => {
@@ -23,18 +128,49 @@ const getGeminiClient = () => {
 
 // API Health Check
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", service: "Pramaan Bharat India News & Safety Hub", timestamp: new Date().toISOString() });
+  res.json({ 
+    status: "ok", 
+    service: "Pramaan Bharat India News & Safety Hub", 
+    timestamp: new Date().toISOString(),
+    rateLimiterActive: true,
+    cacheActive: true
+  });
 });
 
-// API: Generate AI Safety Briefing for a state/district and time period
-app.post("/api/gemini/safety-briefing", async (req, res) => {
+// API: Check subscription status & quota
+app.get("/api/subscription/status", (req, res) => {
+  const ip = getClientIp(req);
+  const proToken = req.headers['x-pro-token'] as string;
+  const isPro = Boolean(proToken && proToken.startsWith('PRO-'));
+  const record = ipQuotaStore.get(ip);
+  const usedToday = record ? record.requestsToday : 0;
+  const remaining = isPro ? 9999 : Math.max(0, FREE_DAILY_LIMIT - usedToday);
+
+  res.json({
+    isPro,
+    dailyLimit: isPro ? 9999 : FREE_DAILY_LIMIT,
+    remainingCredits: remaining,
+    usedToday
+  });
+});
+
+// API: Generate AI Safety Briefing for a state/district and time period (Cached & Rate Limited)
+app.post("/api/gemini/safety-briefing", rateLimitMiddleware, async (req, res) => {
   try {
     const { state, district, timeRange, topCrimeCategories } = req.body;
+    const cacheKey = `briefing:${state || 'all'}:${district || 'all'}:${timeRange || 'current'}`;
+    
+    // Check Cache first
+    const cached = getFromCache(cacheKey);
+    if (cached) {
+      return res.json({ ...cached, source: `${cached.source} (Verified Cache)` });
+    }
+
     const ai = getGeminiClient();
 
     if (!ai) {
       // Return smart fallback briefing if no API key is set
-      return res.json({
+      const fallbackData = {
         summary: `Public safety advisory for ${district || state || 'All India'} (${timeRange || 'Current Period'}): Law enforcement reports heightened vigilance regarding digital cybercrimes and evening commuter safety. Police patrol beats have increased in commercial transit hubs.`,
         keyAdvisories: [
           `Verify unknown callers claiming to be law enforcement or courier officials requesting OTP/remote access.`,
@@ -44,7 +180,9 @@ app.post("/api/gemini/safety-briefing", async (req, res) => {
         riskLevel: "Moderate (Monitored)",
         policeInitiatives: "Intensified automated CCTV surveillance & Cyber Security Helpline 1930 integration.",
         source: "Pramaan Bharat Law Enforcement Advisory Intelligence (Automated Fallback)"
-      });
+      };
+      setInCache(cacheKey, fallbackData);
+      return res.json(fallbackData);
     }
 
     const prompt = `You are a senior Indian Law Enforcement & Public Safety Intelligence Analyst.
@@ -73,7 +211,9 @@ Format your response strictly as JSON with this exact structure:
 
     const text = response.text || "{}";
     const data = JSON.parse(text);
-    return res.json({ ...data, source: "Pramaan Bharat Gemini 3.7 Intelligence" });
+    const result = { ...data, source: "Pramaan Bharat Gemini 3.7 Intelligence" };
+    setInCache(cacheKey, result);
+    return res.json(result);
   } catch (error: any) {
     console.error("Gemini Safety Briefing Error:", error?.message || error);
     return res.status(200).json({
@@ -90,14 +230,21 @@ Format your response strictly as JSON with this exact structure:
   }
 });
 
-// API: Summarize News Article with Fact-Check Perspective
-app.post("/api/gemini/summarize-news", async (req, res) => {
+// API: Summarize News Article with Fact-Check Perspective (Cached & Rate Limited)
+app.post("/api/gemini/summarize-news", rateLimitMiddleware, async (req, res) => {
   try {
     const { title, content, source, category, state } = req.body;
+    const cacheKey = `summary:${encodeURIComponent((title || '').substring(0, 60))}`;
+
+    const cached = getFromCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const ai = getGeminiClient();
 
     if (!ai) {
-      return res.json({
+      const fallback = {
         summaryPoints: [
           `Key development reported by ${source || 'National Media'} regarding ${category || 'regional affairs'}.`,
           `Authorities and civil officials are taking measured steps to address community impact in ${state || 'the region'}.`,
@@ -105,7 +252,9 @@ app.post("/api/gemini/summarize-news", async (req, res) => {
         ],
         credibilityCheck: "Verified - Matched with credible Indian wire sources (PTI/ANI)",
         keyTakeaway: `${title}: Official measures underway with public safety protocols deployed.`
-      });
+      };
+      setInCache(cacheKey, fallback);
+      return res.json(fallback);
     }
 
     const prompt = `Summarize this Indian news report into 3 crisp, highly readable bullet points with a factual credibility perspective:
@@ -131,6 +280,7 @@ Return JSON with:
     });
 
     const parsed = JSON.parse(response.text || "{}");
+    setInCache(cacheKey, parsed);
     return res.json(parsed);
   } catch (error: any) {
     console.error("Gemini News Summary Error:", error);
@@ -146,20 +296,29 @@ Return JSON with:
   }
 });
 
-// API: Classify and moderate community neighborhood safety concern
-app.post("/api/gemini/classify-report", async (req, res) => {
+// API: Classify and moderate community neighborhood safety concern (Cached & Rate Limited)
+app.post("/api/gemini/classify-report", rateLimitMiddleware, async (req, res) => {
   try {
     const { title, description, location, state, district } = req.body;
+    const cacheKey = `classify:${encodeURIComponent((title || '').substring(0, 40))}:${state || ''}`;
+
+    const cached = getFromCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const ai = getGeminiClient();
 
     if (!ai) {
-      return res.json({
+      const fallback = {
         category: "Community Safety",
         urgency: "Medium",
         routingDepartment: "Local Police Station Beat Officer & Municipal Ward Office",
         safetyAdvice: "Keep photographic records and notify your resident welfare association while police beat patrol reviews the spot.",
         isValidConcern: true
-      });
+      };
+      setInCache(cacheKey, fallback);
+      return res.json(fallback);
     }
 
     const prompt = `Analyze this citizen-submitted neighbourhood safety report in India:
@@ -184,7 +343,9 @@ Classify into JSON:
       }
     });
 
-    return res.json(JSON.parse(response.text || "{}"));
+    const parsed = JSON.parse(response.text || "{}");
+    setInCache(cacheKey, parsed);
+    return res.json(parsed);
   } catch (err) {
     return res.json({
       category: "Public Safety",
@@ -196,14 +357,21 @@ Classify into JSON:
   }
 });
 
-// API: Generate / Fetch Fresh Verified Real-time Indian News via Gemini
-app.post("/api/gemini/live-news", async (req, res) => {
+// API: Generate / Fetch Fresh Verified Real-time Indian News via Gemini (Cached & Rate Limited)
+app.post("/api/gemini/live-news", rateLimitMiddleware, async (req, res) => {
   try {
     const { category, state, count = 4, searchQuery } = req.body;
+    const cacheKey = `livenews:${category || 'all'}:${state || 'all'}:${encodeURIComponent(searchQuery || '')}`;
+
+    const cached = getFromCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const ai = getGeminiClient();
 
     if (!ai) {
-      return res.json({
+      const fallback = {
         articles: [
           {
             id: `news-live-${Date.now()}-1`,
@@ -239,7 +407,9 @@ app.post("/api/gemini/live-news", async (req, res) => {
             ]
           }
         ]
-      });
+      };
+      setInCache(cacheKey, fallback);
+      return res.json(fallback);
     }
 
     const prompt = `Generate ${count} distinct, realistic, high-quality news reports for India.
@@ -299,6 +469,7 @@ Format response strictly as a JSON object:
     });
 
     const parsed = JSON.parse(response.text || '{"articles":[]}');
+    setInCache(cacheKey, parsed);
     return res.json(parsed);
   } catch (err: any) {
     console.error("Live News Generation Error:", err?.message || err);
@@ -318,7 +489,6 @@ app.post("/api/police/verify-badge", (req, res) => {
     "OFFICER": { name: "Arun Kumar IPS", designation: "Superintendent of Police", jurisdiction: "National Cyber Coordination Centre", rank: "SP" }
   };
 
-  // Accepted PINs: '1120', '1234', '9999' or matching badge
   const validPins = ["1120", "1234", "9999", "0000"];
   const trimmedBadge = (badgeId || "").trim().toUpperCase();
 
@@ -332,7 +502,6 @@ app.post("/api/police/verify-badge", (req, res) => {
     });
   }
 
-  // Fallback demo badge match if starts with POL or OFFICER
   if (trimmedBadge.includes("POL") || trimmedBadge.includes("OFFICER") || trimmedBadge === "DEMO") {
     return res.json({
       authenticated: true,

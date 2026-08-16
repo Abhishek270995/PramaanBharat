@@ -41,6 +41,14 @@ import {
 import { 
   EmergencyDirectoryModal 
 } from './components/EmergencyDirectoryModal';
+import { 
+  SubscriptionModal 
+} from './components/SubscriptionModal';
+import { 
+  UserSubscription, 
+  getSubscriptionState, 
+  consumeAiCredit 
+} from './utils/subscriptionUtils';
 
 import { 
   StateInfo, 
@@ -74,6 +82,8 @@ export default function App() {
   const [isBookmarksView, setIsBookmarksView] = useState<boolean>(false);
   const [allArticles, setAllArticles] = useState<NewsArticle[]>(NEWS_ARTICLES);
   const [isFetchingLiveNews, setIsFetchingLiveNews] = useState<boolean>(false);
+  const [subscription, setSubscription] = useState<UserSubscription>(getSubscriptionState());
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState<boolean>(false);
 
   // Followed preferences for personalized feed
   const [followedStateIds, setFollowedStateIds] = useState<string[]>(['delhi-ncr', 'maharashtra', 'karnataka']);
@@ -89,6 +99,15 @@ export default function App() {
   const [isPersonalizeModalOpen, setIsPersonalizeModalOpen] = useState<boolean>(false);
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState<boolean>(false);
   const [selectedArticleForModal, setSelectedArticleForModal] = useState<NewsArticle | null>(null);
+
+  // Sync subscription updates across windows / events
+  useEffect(() => {
+    const handleSubUpdate = () => {
+      setSubscription(getSubscriptionState());
+    };
+    window.addEventListener('subscription_updated', handleSubUpdate);
+    return () => window.removeEventListener('subscription_updated', handleSubUpdate);
+  }, []);
 
   // Active section view tab (Metrics & Safety Hub vs Full News Feed vs Solved Archive vs Community Watch)
   const [activeHomeTab, setActiveHomeTab] = useState<'dashboard' | 'news' | 'archive' | 'community'>('dashboard');
@@ -163,19 +182,33 @@ export default function App() {
   };
 
   const handleFetchLiveNews = async (category?: NewsCategory, state?: string) => {
+    const creditCheck = consumeAiCredit();
+    if (!creditCheck.success) {
+      setIsSubscriptionModalOpen(true);
+      return;
+    }
+
     setIsFetchingLiveNews(true);
     try {
       const targetCat = category || activeCategory;
       const targetState = state || selectedState?.name;
       const res = await fetch('/api/gemini/live-news', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-pro-token': subscription.authToken || ''
+        },
         body: JSON.stringify({
           category: targetCat === 'All' ? 'National' : targetCat,
           state: targetState,
           count: 3
         })
       });
+
+      if (res.status === 429) {
+        setIsSubscriptionModalOpen(true);
+        return;
+      }
 
       if (!res.ok) {
         throw new Error(`Server returned ${res.status}`);
@@ -218,6 +251,8 @@ export default function App() {
         onOpenAISafetyBriefing={() => setIsAISafetyAdvisorOpen(true)}
         onOpenPersonalizeModal={() => setIsPersonalizeModalOpen(true)}
         onOpenEmergencyModal={() => setIsEmergencyModalOpen(true)}
+        onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
+        subscription={subscription}
         bookmarkedCount={bookmarkedIds.length}
         onToggleBookmarksView={() => setIsBookmarksView(!isBookmarksView)}
         isBookmarksView={isBookmarksView}
@@ -374,6 +409,7 @@ export default function App() {
             <CommunityVoices
               selectedState={selectedState}
               selectedDistrict={selectedDistrict}
+              subscription={subscription}
             />
 
             {/* 6. Police Solved Cases Database Snapshot */}
@@ -527,6 +563,8 @@ export default function App() {
         selectedState={selectedState}
         selectedDistrict={selectedDistrict}
         onOpenEmergencyModal={() => setIsEmergencyModalOpen(true)}
+        onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
+        subscription={subscription}
       />
 
       <ArticleModal
@@ -535,6 +573,8 @@ export default function App() {
         onClose={() => setSelectedArticleForModal(null)}
         isBookmarked={selectedArticleForModal ? bookmarkedIds.includes(selectedArticleForModal.id) : false}
         onToggleBookmark={handleToggleBookmark}
+        onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
+        subscription={subscription}
       />
 
       <PersonalizeFeedModal
@@ -550,6 +590,13 @@ export default function App() {
       <EmergencyDirectoryModal
         isOpen={isEmergencyModalOpen}
         onClose={() => setIsEmergencyModalOpen(false)}
+      />
+
+      <SubscriptionModal
+        isOpen={isSubscriptionModalOpen}
+        onClose={() => setIsSubscriptionModalOpen(false)}
+        subscription={subscription}
+        onSubscriptionChanged={(newSub) => setSubscription(newSub)}
       />
 
     </div>

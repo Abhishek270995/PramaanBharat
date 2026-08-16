@@ -12,10 +12,12 @@ import {
   ExternalLink,
   MapPin,
   Eye,
-  FileText
+  FileText,
+  Crown
 } from 'lucide-react';
 import { NewsArticle, LanguageCode } from '../types';
 import { getSourceByName } from '../data/verifiedSources';
+import { UserSubscription, consumeAiCredit } from '../utils/subscriptionUtils';
 
 interface ArticleModalProps {
   article: NewsArticle | null;
@@ -23,6 +25,8 @@ interface ArticleModalProps {
   onClose: () => void;
   isBookmarked: boolean;
   onToggleBookmark: (id: string) => void;
+  onOpenSubscriptionModal?: () => void;
+  subscription?: UserSubscription;
 }
 
 export const ArticleModal: React.FC<ArticleModalProps> = ({
@@ -30,7 +34,9 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
   currentLanguage,
   onClose,
   isBookmarked,
-  onToggleBookmark
+  onToggleBookmark,
+  onOpenSubscriptionModal,
+  subscription
 }) => {
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
@@ -66,17 +72,38 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
       return;
     }
 
+    const creditCheck = consumeAiCredit();
+    if (!creditCheck.success) {
+      if (onOpenSubscriptionModal) {
+        onClose();
+        onOpenSubscriptionModal();
+      }
+      return;
+    }
+
     setIsGeneratingAi(true);
     try {
       const res = await fetch('/api/gemini/summarize-news', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-pro-token': subscription?.authToken || ''
+        },
         body: JSON.stringify({
           title: article.title,
           content: article.content,
           language: currentLanguage
         })
       });
+
+      if (res.status === 429) {
+        if (onOpenSubscriptionModal) {
+          onClose();
+          onOpenSubscriptionModal();
+          return;
+        }
+      }
+
       const data = await res.json();
       if (data.points && Array.isArray(data.points)) {
         setAiSummary(data.points);

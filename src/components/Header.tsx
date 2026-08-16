@@ -13,10 +13,12 @@ import {
   Newspaper,
   Compass,
   Lock,
-  ChevronDown
+  ChevronDown,
+  Crown
 } from 'lucide-react';
 import { StateInfo, DistrictInfo, LanguageCode, NewsCategory, AuthorizedOfficer } from '../types';
 import { AVAILABLE_LANGUAGES } from '../data/communityData';
+import { UserSubscription } from '../utils/subscriptionUtils';
 
 interface HeaderProps {
   selectedState: StateInfo | null;
@@ -35,6 +37,8 @@ interface HeaderProps {
   onOpenAISafetyBriefing: () => void;
   onOpenPersonalizeModal: () => void;
   onOpenEmergencyModal: () => void;
+  onOpenSubscriptionModal: () => void;
+  subscription: UserSubscription;
   bookmarkedCount: number;
   onToggleBookmarksView: () => void;
   isBookmarksView: boolean;
@@ -57,6 +61,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAISafetyBriefing,
   onOpenPersonalizeModal,
   onOpenEmergencyModal,
+  onOpenSubscriptionModal,
+  subscription,
   bookmarkedCount,
   onToggleBookmarksView,
   isBookmarksView
@@ -279,6 +285,32 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
                   {bookmarkedCount}
                 </span>
+              )}
+            </button>
+
+            {/* AI Subscription / Quota Badge */}
+            <button
+              id="subscription-tier-btn"
+              onClick={onOpenSubscriptionModal}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+                subscription.isPro
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 border-amber-600 text-white shadow-xs'
+                  : 'bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border-blue-200 text-blue-800'
+              }`}
+              title={subscription.isPro ? "Pramaan Pro Active" : "View AI Credits & Subscription Plans"}
+            >
+              {subscription.isPro ? (
+                <>
+                  <Crown className="w-3.5 h-3.5 fill-white text-white" />
+                  <span className="hidden sm:inline">PRO ACTIVE</span>
+                  <span className="sm:hidden">PRO</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="hidden sm:inline">AI Credits: {subscription.aiCreditsRemaining}/{subscription.dailyAiQuota}</span>
+                  <span className="sm:hidden">{subscription.aiCreditsRemaining} AI</span>
+                </>
               )}
             </button>
 
