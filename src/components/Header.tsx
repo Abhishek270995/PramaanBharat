@@ -132,17 +132,18 @@ export const Header: React.FC<HeaderProps> = ({
                   <span className="text-white font-black text-sm sm:text-base tracking-tighter">PB</span>
                 </div>
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1 sm:gap-1.5">
-                  <span className="font-extrabold text-base sm:text-xl tracking-tight text-slate-900">
+              <div className="flex flex-col justify-center">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-black text-base sm:text-lg md:text-xl tracking-tight text-slate-900 leading-tight">
                     Pramaan<span className="text-blue-600">Bharat</span>
                   </span>
-                  <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 hidden sm:inline-block">
+                  <span className="text-[8.5px] sm:text-[9.5px] font-extrabold uppercase tracking-wider px-1.5 py-0.2 rounded-full bg-blue-50 text-blue-700 border border-blue-200 shrink-0 inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
                     Verified
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 hidden md:inline-block font-medium">
-                  {istTime || 'New Delhi, India'}
+                <span className="text-[9px] sm:text-[10px] md:text-[11px] font-semibold text-slate-500 tracking-tight leading-tight block mt-0.5">
+                  India Verified News &amp; Public Safety Intelligence
                 </span>
               </div>
             </div>

@@ -534,10 +534,13 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-orange-500 via-white to-emerald-500 p-[1.5px] flex items-center justify-center">
                   <div className="w-full h-full bg-slate-900 rounded-[6px] flex items-center justify-center font-black text-white text-xs">
-                    BP
+                    PB
                   </div>
                 </div>
-                <span className="font-extrabold text-base text-white">Pramaan Bharat</span>
+                <div>
+                  <span className="font-extrabold text-base text-white block leading-tight">Pramaan Bharat</span>
+                  <span className="text-[10px] text-slate-400 font-semibold block">India Verified News &amp; Public Safety Intelligence</span>
+                </div>
               </div>
               <p className="text-slate-400 leading-relaxed">
                 National News Intelligence & Citizen Safety Telemetry Platform for India. Integrated with NCRB datasets, State Police Commissionerates, and verified national wire agencies.
