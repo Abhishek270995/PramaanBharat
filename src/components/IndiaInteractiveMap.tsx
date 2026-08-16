@@ -19,7 +19,9 @@ import {
   AlertTriangle,
   RotateCcw,
   Maximize2,
-  Compass
+  Compass,
+  ArrowLeft,
+  ChevronDown
 } from 'lucide-react';
 import { StateInfo, DistrictInfo, RiskLevel } from '../types';
 import { requestBrowserLocation } from '../utils/geolocationUtils';
@@ -52,8 +54,9 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
   const [mapSearch, setMapSearch] = useState<string>('');
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [riskFilter, setRiskFilter] = useState<'all' | 'High' | 'Moderate' | 'Low'>('all');
+  const [showStateDropdown, setShowStateDropdown] = useState<boolean>(false);
 
-  // Official ISRO Bhuvan (National Remote Sensing Centre, Govt of India) & Certified GIS Tile Layers
+  // Official ISRO Bhuvan & Certified GIS Tile Layers
   const TILE_URLS: Record<MapTileStyle, { url: string; attribution: string; subdomains?: string }> = {
     bhuvan: {
       url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
@@ -134,6 +137,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
       // 1. Zoom into State and render all its District Markers
       const districts = selectedState.districts || [];
 
+      // Render district pins for selected state
       if (districts.length > 0) {
         districts.forEach(dist => {
           if (!dist.coordinates || dist.coordinates.length !== 2) return;
@@ -141,7 +145,6 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
           const isSelected = selectedDistrict?.id === dist.id;
           const color = getPinColor(dist.riskLevel);
 
-          // Custom pulsing HTML marker
           const customIcon = L.divIcon({
             className: 'custom-district-pin',
             html: `
@@ -178,7 +181,6 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
 
           const marker = L.marker([lat, lon], { icon: customIcon }).addTo(markersLayer);
 
-          // Popup on click
           const popupContent = `
             <div style="font-family: inherit; padding: 4px; min-width: 180px;">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 6px;">
@@ -198,13 +200,41 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
             onSelectDistrict(dist);
           });
         });
+      }
 
-        // If a specific district is chosen, fly directly to it
-        if (selectedDistrict && selectedDistrict.coordinates) {
-          mapInstanceRef.current.flyTo(selectedDistrict.coordinates, 10, { duration: 1.2 });
-        } else if (selectedState.centerCoordinates) {
-          mapInstanceRef.current.flyTo(selectedState.centerCoordinates, 7.5, { duration: 1.2 });
-        }
+      // Also render subtle clickable pins for all OTHER states so user can jump across states directly on the map
+      statesList.filter(s => s.id !== selectedState.id).forEach(otherState => {
+        if (!otherState.centerCoordinates || otherState.centerCoordinates.length !== 2) return;
+        const [oLat, oLon] = otherState.centerCoordinates;
+
+        const otherIcon = L.divIcon({
+          className: 'other-state-pin',
+          html: `
+            <div style="opacity: 0.75; transform: translate(-50%, -100%); cursor: pointer;">
+              <div style="background: #1e293b; color: #94a3b8; font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 12px; border: 1px solid #475569; white-space: nowrap;">
+                ${otherState.name}
+              </div>
+            </div>
+          `,
+          iconSize: [0, 0]
+        });
+
+        const otherMarker = L.marker([oLat, oLon], { icon: otherIcon }).addTo(markersLayer);
+        otherMarker.on('click', () => {
+          onSelectState(otherState);
+          if (otherState.districts && otherState.districts.length > 0) {
+            onSelectDistrict(otherState.districts[0]);
+          } else {
+            onSelectDistrict(null);
+          }
+        });
+      });
+
+      // Fly to district or state center
+      if (selectedDistrict && selectedDistrict.coordinates) {
+        mapInstanceRef.current.flyTo(selectedDistrict.coordinates, 10, { duration: 1.2 });
+      } else if (selectedState.centerCoordinates) {
+        mapInstanceRef.current.flyTo(selectedState.centerCoordinates, 7.5, { duration: 1.2 });
       }
     } else {
       // 2. National View: Render all State HQ Markers
@@ -274,6 +304,11 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
     }
   };
 
+  const handleResetAllIndia = () => {
+    onSelectState(null);
+    onSelectDistrict(null);
+  };
+
   // Search matches
   const searchMatches = useMemo(() => {
     if (!mapSearch.trim()) return [];
@@ -306,9 +341,9 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
     <div className="bg-white rounded-3xl p-4 sm:p-7 shadow-sm border border-slate-200 my-6">
       
       {/* 1. Header Bar with Search, Layers & Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold tracking-wider uppercase border border-blue-200">
               Live Google-Calibrated GIS Map
             </span>
@@ -367,7 +402,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
               value={mapSearch}
               onChange={(e) => setMapSearch(e.target.value)}
               placeholder="Search Banka, Patna, Mumbai..."
-              className="pl-8 pr-3 py-1.5 bg-slate-100 text-slate-900 text-xs rounded-full border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 w-48 sm:w-56"
+              className="pl-8 pr-3 py-1.5 bg-slate-100 text-slate-900 text-xs rounded-full border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 w-44 sm:w-52"
             />
             {mapSearch && (
               <button 
@@ -419,58 +454,141 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
             <span>{isLocating ? 'Locating...' : 'Locate Me'}</span>
           </button>
 
-          {/* Reset All India Button */}
+          {/* Global Reset All India Button */}
           {selectedState && (
             <button
-              onClick={() => { onSelectState(null); onSelectDistrict(null); }}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition-colors cursor-pointer"
+              onClick={handleResetAllIndia}
+              className="flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer shrink-0"
+              title="Reset map view back to National All India"
             >
-              <RotateCcw className="w-3 h-3" />
-              <span>All India</span>
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Reset All India</span>
             </button>
           )}
 
         </div>
       </div>
 
-      {/* 2. Map Legend */}
-      <div className="flex items-center justify-between flex-wrap gap-3 py-3 border-b border-slate-100 text-xs">
-        <div className="flex items-center gap-4 flex-wrap">
-          <span className="font-semibold text-slate-500 text-[11px]">Risk Intensity:</span>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-rose-500 shadow-xs" />
-            <span className="text-slate-700 font-medium">High Risk (Hotspot)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-amber-500 shadow-xs" />
-            <span className="text-slate-700 font-medium">Moderate (Monitored)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-xs" />
-            <span className="text-slate-700 font-medium">Low Incident / Safe</span>
-          </div>
+      {/* 2. Quick State Selector Horizontal Ribbon */}
+      <div className="py-2.5 border-b border-slate-100 flex items-center gap-2 overflow-x-auto scrollbar-none">
+        <span className="text-[11px] font-extrabold uppercase text-slate-400 shrink-0 flex items-center gap-1">
+          <Compass className="w-3 h-3 text-blue-600" />
+          <span>Quick Select:</span>
+        </span>
+
+        {/* All India Pill */}
+        <button
+          onClick={handleResetAllIndia}
+          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
+            !selectedState 
+              ? 'bg-slate-900 text-white shadow-xs ring-2 ring-slate-900/20' 
+              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+          }`}
+        >
+          🇮🇳 All India
+        </button>
+
+        {/* State Quick Pills */}
+        {statesList.map((st) => {
+          const isCurrent = selectedState?.id === st.id;
+          return (
+            <button
+              key={st.id}
+              onClick={() => {
+                onSelectState(st);
+                if (st.districts && st.districts.length > 0) {
+                  onSelectDistrict(st.districts[0]);
+                } else {
+                  onSelectDistrict(null);
+                }
+              }}
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+                isCurrent 
+                  ? 'bg-blue-600 text-white shadow-xs ring-2 ring-blue-400/30' 
+                  : 'bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                st.riskLevel === 'High' ? 'bg-rose-500' : st.riskLevel === 'Moderate' ? 'bg-amber-500' : 'bg-emerald-500'
+              }`} />
+              <span>{st.name}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 3. Interactive Breadcrumb Navigation & Risk Legend */}
+      <div className="flex items-center justify-between flex-wrap gap-3 py-2.5 border-b border-slate-100 text-xs">
+        {/* Breadcrumb Path */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button 
+            onClick={handleResetAllIndia}
+            className="font-bold text-blue-600 hover:underline cursor-pointer"
+          >
+            🇮🇳 India
+          </button>
+          {selectedState && (
+            <>
+              <span className="text-slate-400">/</span>
+              <span className="font-bold text-slate-900">{selectedState.name}</span>
+            </>
+          )}
+          {selectedDistrict && (
+            <>
+              <span className="text-slate-400">/</span>
+              <span className="font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                📍 {selectedDistrict.name}
+              </span>
+            </>
+          )}
         </div>
 
-        <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-          <span>Real-World GPS Coordinates &amp; State Police Feeds</span>
+        {/* Risk Intensity Legend */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="font-semibold text-slate-500 text-[11px]">Risk:</span>
+          <div className="flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+            <span className="text-slate-700 text-[11px] font-medium">Hotspot</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+            <span className="text-slate-700 text-[11px] font-medium">Monitored</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <span className="text-slate-700 text-[11px] font-medium">Safe</span>
+          </div>
         </div>
       </div>
 
-      {/* 3. Main Grid: Real Leaflet Map (Left) & District Explorer Dashboard (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-5">
+      {/* 4. Main Grid: Real Leaflet Map (Left) & District Explorer Dashboard (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4">
         
         {/* Left: Real Leaflet Map Container */}
         <div className="lg:col-span-7 rounded-3xl overflow-hidden shadow-xl border border-slate-200 relative min-h-[500px] flex flex-col justify-between">
           <div ref={mapContainerRef} className="w-full h-full min-h-[500px] z-10" />
 
-          {/* Floating Map Controls Overlays */}
-          <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-xl border border-slate-200 text-xs font-bold text-slate-900 flex items-center gap-2 pointer-events-none">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-blue-700 font-extrabold">🇮🇳 ISRO Bhuvan:</span>
-            <span>
-              {selectedState ? `${selectedState.name} (${selectedState.districts.length} Districts)` : 'All India National Base'}
-            </span>
+          {/* Floating Map Overlays: Current Region & Instant Reset */}
+          <div className="absolute top-3 left-3 z-20 flex items-center gap-2 flex-wrap">
+            <div className="bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-2xl shadow-xl border border-slate-200 text-xs font-bold text-slate-900 flex items-center gap-2 pointer-events-none">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+              <span className="text-blue-700 font-extrabold">ISRO Bhuvan:</span>
+              <span>
+                {selectedState ? `${selectedState.name} (${selectedState.districts.length} Districts)` : 'All India National Base'}
+              </span>
+            </div>
+
+            {/* Quick Reset Button directly on map */}
+            {selectedState && (
+              <button
+                onClick={handleResetAllIndia}
+                className="bg-slate-900/90 hover:bg-slate-900 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
+                title="Zoom back out to All India"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-blue-400" />
+                <span>All India View</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -480,7 +598,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
           {selectedState ? (
             <div className="bg-slate-50 rounded-3xl p-4 sm:p-6 border border-slate-200 flex-1 flex flex-col justify-between">
               
-              {/* Selected State Header */}
+              {/* Selected State Header & Quick Change */}
               <div>
                 <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-200">
                   <div>
@@ -497,15 +615,27 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
                     </h4>
                   </div>
 
-                  <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full text-white ${
-                    selectedState.riskLevel === 'High' ? 'bg-rose-600' : selectedState.riskLevel === 'Moderate' ? 'bg-amber-500' : 'bg-emerald-600'
-                  }`}>
-                    {selectedState.riskLevel} Risk
-                  </span>
+                  {/* Switch State Button */}
+                  <div className="flex flex-col items-end gap-1">
+                    <button
+                      onClick={handleResetAllIndia}
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold transition-colors cursor-pointer"
+                      title="Switch to another Indian state"
+                    >
+                      <RotateCcw className="w-3 h-3 text-blue-600" />
+                      <span>Change State</span>
+                    </button>
+
+                    <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full text-white ${
+                      selectedState.riskLevel === 'High' ? 'bg-rose-600' : selectedState.riskLevel === 'Moderate' ? 'bg-amber-500' : 'bg-emerald-600'
+                    }`}>
+                      {selectedState.riskLevel} Risk
+                    </span>
+                  </div>
                 </div>
 
                 {/* State Crime & Police HQ Snapshot */}
-                <div className="grid grid-cols-2 gap-2 my-3.5 text-xs">
+                <div className="grid grid-cols-2 gap-2 my-3 text-xs">
                   <div className="p-2.5 rounded-2xl bg-white border border-slate-200 shadow-2xs">
                     <span className="text-[10px] text-slate-500 uppercase font-bold">Reported Crimes</span>
                     <p className="text-sm font-black text-slate-900 mt-0.5">{selectedState.reportedCrimes.toLocaleString('en-IN')}</p>
@@ -517,10 +647,10 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
                 </div>
 
                 {/* Police HQ */}
-                <div className="p-3 rounded-2xl bg-white border border-slate-200 text-xs text-slate-700 flex items-start gap-2 mb-4">
+                <div className="p-2.5 rounded-2xl bg-white border border-slate-200 text-xs text-slate-700 flex items-start gap-2 mb-3">
                   <Building2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-slate-900 block">State Police Headquarters</span>
+                    <span className="font-bold text-slate-900 block text-xs">State Police Headquarters</span>
                     <span className="text-slate-600 text-[11px] leading-tight block">{selectedState.policeHeadquarters}</span>
                   </div>
                 </div>
@@ -546,7 +676,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
                 </div>
 
                 {/* District Scrollable List */}
-                <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
                   {activeDistricts.map((dist) => {
                     const isDistSelected = selectedDistrict?.id === dist.id;
                     return (
@@ -558,16 +688,16 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
                             mapInstanceRef.current.flyTo(dist.coordinates, 10, { duration: 1.2 });
                           }
                         }}
-                        className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+                        className={`p-2.5 rounded-2xl border transition-all cursor-pointer ${
                           isDistSelected
                             ? 'bg-blue-600 text-white border-blue-700 shadow-md ring-2 ring-blue-400/30'
                             : 'bg-white hover:bg-blue-50/60 border-slate-200 text-slate-800'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <MapPin className={`w-4 h-4 ${isDistSelected ? 'text-amber-300' : 'text-blue-600'}`} />
-                            <span className="font-bold text-xs sm:text-sm">{dist.name}</span>
+                          <div className="flex items-center gap-1.5">
+                            <MapPin className={`w-3.5 h-3.5 ${isDistSelected ? 'text-amber-300' : 'text-blue-600'}`} />
+                            <span className="font-bold text-xs">{dist.name}</span>
                           </div>
                           <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
                             isDistSelected 
@@ -582,7 +712,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-100/30 text-[10px]">
+                        <div className="grid grid-cols-3 gap-2 mt-1.5 pt-1.5 border-t border-slate-100/30 text-[10px]">
                           <div>
                             <span className={isDistSelected ? 'text-blue-100' : 'text-slate-400'}>Reported:</span>
                             <span className="font-bold ml-1">{dist.reportedCrimes}</span>
@@ -597,7 +727,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
                           </div>
                         </div>
 
-                        <div className="mt-1.5 text-[10px] flex items-center justify-between">
+                        <div className="mt-1 text-[10px] flex items-center justify-between">
                           <span className={isDistSelected ? 'text-blue-200' : 'text-slate-500'}>
                             📞 {dist.emergencyHelpline}
                           </span>
@@ -612,10 +742,10 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
               </div>
 
               {/* Action Trigger */}
-              <div className="pt-3 mt-3 border-t border-slate-200 flex items-center gap-2">
+              <div className="pt-2.5 mt-2.5 border-t border-slate-200 flex items-center gap-2">
                 <button
                   onClick={onOpenAISafetyBriefing}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                   <span>Generate AI Briefing for {selectedDistrict ? selectedDistrict.name : selectedState.name}</span>
@@ -629,13 +759,13 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
                 <MapPin className="w-7 h-7" />
               </div>
               <div>
-                <h4 className="text-base font-black text-slate-900">Select any Indian State on the Map</h4>
+                <h4 className="text-base font-black text-slate-900">Select Any State on Map or Pill Bar</h4>
                 <p className="text-xs text-slate-500 max-w-xs mt-1 leading-relaxed">
-                  Click on any state pin or search above to zoom in directly to district-level crime data, police stations, and localized safety metrics.
+                  Click on any state pin, tap a quick-select pill above, or search to explore district-level crime analytics and police helplines.
                 </p>
               </div>
 
-              {/* Quick State Selection Buttons */}
+              {/* Quick State Grid */}
               <div className="grid grid-cols-2 gap-2 w-full pt-2">
                 {statesList.slice(0, 6).map((st) => (
                   <button
