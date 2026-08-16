@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import L from 'leaflet';
 import { 
   MapPin, 
   Navigation, 
@@ -13,11 +14,12 @@ import {
   ExternalLink,
   ChevronRight,
   Sparkles,
-  Phone,
   Building2,
   CheckCircle2,
   AlertTriangle,
-  RotateCcw
+  RotateCcw,
+  Maximize2,
+  Compass
 } from 'lucide-react';
 import { StateInfo, DistrictInfo, RiskLevel } from '../types';
 import { requestBrowserLocation } from '../utils/geolocationUtils';
@@ -31,213 +33,7 @@ interface IndiaInteractiveMapProps {
   onOpenAISafetyBriefing: () => void;
 }
 
-// Geographically calibrated vector paths and anchor points for all Indian states on a 1000x1100 canvas
-interface StateGeoPath {
-  id: string;
-  code: string;
-  name: string;
-  cx: number; // Center X
-  cy: number; // Center Y
-  svgD: string;
-}
-
-const INDIA_GEO_MAP_DATA: StateGeoPath[] = [
-  // 1. Northern Region
-  {
-    id: 'jammu-kashmir',
-    code: 'JK',
-    name: 'Jammu & Kashmir',
-    cx: 260,
-    cy: 130,
-    svgD: 'M 210 110 C 230 70 270 50 310 65 C 340 85 340 130 310 170 C 275 185 240 175 210 155 Z'
-  },
-  {
-    id: 'himachal-pradesh',
-    code: 'HP',
-    name: 'Himachal Pradesh',
-    cx: 325,
-    cy: 215,
-    svgD: 'M 285 185 L 345 175 L 375 220 L 330 250 L 290 230 Z'
-  },
-  {
-    id: 'punjab',
-    code: 'PB',
-    name: 'Punjab',
-    cx: 265,
-    cy: 245,
-    svgD: 'M 235 210 L 285 200 L 295 270 L 240 280 Z'
-  },
-  {
-    id: 'uttarakhand',
-    code: 'UK',
-    name: 'Uttarakhand',
-    cx: 380,
-    cy: 275,
-    svgD: 'M 345 235 L 420 250 L 415 310 L 350 300 Z'
-  },
-  {
-    id: 'haryana',
-    code: 'HR',
-    name: 'Haryana',
-    cx: 295,
-    cy: 310,
-    svgD: 'M 265 275 L 330 270 L 325 345 L 260 340 Z'
-  },
-  {
-    id: 'delhi-ncr',
-    code: 'DL',
-    name: 'Delhi NCR',
-    cx: 330,
-    cy: 330,
-    svgD: 'M 318 318 L 342 318 L 342 342 L 318 342 Z'
-  },
-
-  // 2. Western Region
-  {
-    id: 'rajasthan',
-    code: 'RJ',
-    name: 'Rajasthan',
-    cx: 220,
-    cy: 395,
-    svgD: 'M 140 320 C 180 290 260 290 280 340 L 295 440 L 205 480 L 140 430 Z'
-  },
-  {
-    id: 'gujarat',
-    code: 'GJ',
-    name: 'Gujarat',
-    cx: 145,
-    cy: 535,
-    svgD: 'M 75 490 C 130 470 190 480 215 520 L 195 595 C 140 600 95 560 75 490 Z'
-  },
-  {
-    id: 'maharashtra',
-    code: 'MH',
-    name: 'Maharashtra',
-    cx: 280,
-    cy: 640,
-    svgD: 'M 195 580 C 260 565 375 565 405 615 L 390 710 L 245 725 L 205 650 Z'
-  },
-  {
-    id: 'goa',
-    code: 'GA',
-    name: 'Goa',
-    cx: 230,
-    cy: 780,
-    svgD: 'M 220 770 L 240 770 L 240 790 L 220 790 Z'
-  },
-
-  // 3. Central Region
-  {
-    id: 'madhya-pradesh',
-    code: 'MP',
-    name: 'Madhya Pradesh',
-    cx: 365,
-    cy: 505,
-    svgD: 'M 275 450 C 350 435 450 440 480 485 L 475 570 L 285 575 L 265 510 Z'
-  },
-  {
-    id: 'chhattisgarh',
-    code: 'CG',
-    name: 'Chhattisgarh',
-    cx: 465,
-    cy: 585,
-    svgD: 'M 445 520 L 490 515 L 505 655 L 440 660 Z'
-  },
-
-  // 4. Eastern Gangetic Region
-  {
-    id: 'uttar-pradesh',
-    code: 'UP',
-    name: 'Uttar Pradesh',
-    cx: 430,
-    cy: 380,
-    svgD: 'M 335 320 C 400 310 510 330 535 375 L 525 450 L 370 445 L 340 375 Z'
-  },
-  {
-    id: 'bihar',
-    code: 'BR',
-    name: 'Bihar',
-    cx: 585,
-    cy: 430,
-    svgD: 'M 525 390 C 570 380 635 390 655 425 L 645 475 L 530 470 Z'
-  },
-  {
-    id: 'jharkhand',
-    code: 'JH',
-    name: 'Jharkhand',
-    cx: 570,
-    cy: 505,
-    svgD: 'M 525 475 L 625 470 L 615 545 L 520 540 Z'
-  },
-  {
-    id: 'west-bengal',
-    code: 'WB',
-    name: 'West Bengal',
-    cx: 655,
-    cy: 490,
-    svgD: 'M 625 420 L 675 420 L 690 580 C 655 590 635 560 625 515 Z'
-  },
-  {
-    id: 'odisha',
-    code: 'OD',
-    name: 'Odisha',
-    cx: 550,
-    cy: 610,
-    svgD: 'M 495 560 C 555 545 615 555 635 605 L 585 680 L 495 655 Z'
-  },
-
-  // 5. Southern Region
-  {
-    id: 'telangana',
-    code: 'TG',
-    name: 'Telangana',
-    cx: 385,
-    cy: 700,
-    svgD: 'M 335 650 L 435 640 L 440 740 L 345 745 Z'
-  },
-  {
-    id: 'andhra-pradesh',
-    code: 'AP',
-    name: 'Andhra Pradesh',
-    cx: 415,
-    cy: 780,
-    svgD: 'M 390 735 C 455 715 515 700 480 830 L 405 850 L 375 790 Z'
-  },
-  {
-    id: 'karnataka',
-    code: 'KA',
-    name: 'Karnataka',
-    cx: 285,
-    cy: 810,
-    svgD: 'M 235 725 L 340 720 L 330 890 L 245 870 Z'
-  },
-  {
-    id: 'tamil-nadu',
-    code: 'TN',
-    name: 'Tamil Nadu',
-    cx: 365,
-    cy: 935,
-    svgD: 'M 325 865 C 385 855 425 860 415 975 L 340 1020 L 325 930 Z'
-  },
-  {
-    id: 'kerala',
-    code: 'KL',
-    name: 'Kerala',
-    cx: 305,
-    cy: 965,
-    svgD: 'M 275 890 L 320 890 L 325 1015 L 295 1015 Z'
-  },
-
-  // 6. North-East Region
-  {
-    id: 'assam',
-    code: 'AS',
-    name: 'Assam & NE',
-    cx: 795,
-    cy: 405,
-    svgD: 'M 705 365 C 770 335 885 340 890 410 L 860 470 L 735 450 Z'
-  }
-];
+type MapTileStyle = 'streets' | 'satellite' | 'dark';
 
 export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
   statesList,
@@ -247,31 +43,214 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
   onSelectDistrict,
   onOpenAISafetyBriefing
 }) => {
-  const [hoveredStateId, setHoveredStateId] = useState<string | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersLayerRef = useRef<L.LayerGroup | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
+
+  const [mapStyle, setMapStyle] = useState<MapTileStyle>('streets');
   const [mapSearch, setMapSearch] = useState<string>('');
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [riskFilter, setRiskFilter] = useState<'all' | 'High' | 'Moderate' | 'Low'>('all');
 
-  // Convert lat/lon to exact map canvas coordinates (X: 0..1000, Y: 0..1100)
-  const getCanvasCoords = (lat: number, lon: number) => {
-    const x = Math.max(50, Math.min(950, (lon - 68) * (850 / 29) + 60));
-    const y = Math.max(40, Math.min(1050, (37 - lat) * (980 / 29) + 45));
-    return { x, y };
-  };
-
-  const getRiskColor = (level?: RiskLevel, isHovered?: boolean, isSelected?: boolean) => {
-    if (isSelected) return '#2563EB'; // Vibrant Royal Blue
-    if (isHovered) return '#3B82F6';
-
-    switch (level) {
-      case 'High':
-        return '#EF4444'; // Red
-      case 'Moderate':
-        return '#F59E0B'; // Amber
-      default:
-        return '#10B981'; // Emerald
+  // Tile layer URLs (CartoDB Voyager matches Google Maps clean street/geospatial aesthetic)
+  const TILE_URLS: Record<MapTileStyle, { url: string; attribution: string }> = {
+    streets: {
+      url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap'
+    },
+    satellite: {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye'
+    },
+    dark: {
+      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+      attribution: '&copy; CARTO &copy; OpenStreetMap'
     }
   };
+
+  // Initialize Leaflet Map
+  useEffect(() => {
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+    // National center of India [22.5937, 78.9629]
+    const map = L.map(mapContainerRef.current, {
+      center: [22.5937, 78.9629],
+      zoom: 5,
+      minZoom: 4,
+      maxZoom: 18,
+      zoomControl: true,
+      scrollWheelZoom: true
+    });
+
+    const tileConfig = TILE_URLS[mapStyle];
+    const tileLayer = L.tileLayer(tileConfig.url, {
+      attribution: tileConfig.attribution,
+      maxZoom: 19,
+      subdomains: 'abcd'
+    }).addTo(map);
+
+    tileLayerRef.current = tileLayer;
+    const markersLayer = L.layerGroup().addTo(map);
+    markersLayerRef.current = markersLayer;
+    mapInstanceRef.current = map;
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, []);
+
+  // Update Tile Style
+  useEffect(() => {
+    if (!mapInstanceRef.current || !tileLayerRef.current) return;
+    const tileConfig = TILE_URLS[mapStyle];
+    tileLayerRef.current.setUrl(tileConfig.url);
+  }, [mapStyle]);
+
+  // Update Markers based on Selected State & Districts
+  useEffect(() => {
+    if (!mapInstanceRef.current || !markersLayerRef.current) return;
+    const markersLayer = markersLayerRef.current;
+    markersLayer.clearLayers();
+
+    const getPinColor = (level?: RiskLevel) => {
+      switch (level) {
+        case 'High': return '#ef4444'; // Red
+        case 'Moderate': return '#f59e0b'; // Amber
+        default: return '#10b981'; // Emerald Safe
+      }
+    };
+
+    if (selectedState) {
+      // 1. Zoom into State and render all its District Markers
+      const districts = selectedState.districts || [];
+
+      if (districts.length > 0) {
+        districts.forEach(dist => {
+          if (!dist.coordinates || dist.coordinates.length !== 2) return;
+          const [lat, lon] = dist.coordinates;
+          const isSelected = selectedDistrict?.id === dist.id;
+          const color = getPinColor(dist.riskLevel);
+
+          // Custom pulsing HTML marker
+          const customIcon = L.divIcon({
+            className: 'custom-district-pin',
+            html: `
+              <div style="position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; transform: translate(-50%, -100%);">
+                <div style="
+                  background: ${isSelected ? '#2563eb' : color};
+                  color: white;
+                  font-weight: 800;
+                  font-size: 11px;
+                  padding: 3px 8px;
+                  border-radius: 20px;
+                  border: 2px solid white;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  white-space: nowrap;
+                  ${isSelected ? 'outline: 3px solid #60a5fa;' : ''}
+                ">
+                  <span>${dist.name}</span>
+                  <span style="font-size: 8px; background: rgba(0,0,0,0.25); padding: 1px 4px; border-radius: 4px;">${dist.riskLevel}</span>
+                </div>
+                <div style="
+                  width: 0; 
+                  height: 0; 
+                  border-left: 6px solid transparent;
+                  border-right: 6px solid transparent;
+                  border-top: 7px solid ${isSelected ? '#2563eb' : color};
+                "></div>
+              </div>
+            `,
+            iconSize: [0, 0]
+          });
+
+          const marker = L.marker([lat, lon], { icon: customIcon }).addTo(markersLayer);
+
+          // Popup on click
+          const popupContent = `
+            <div style="font-family: inherit; padding: 4px; min-width: 180px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 6px;">
+                <b style="font-size: 13px; color: #0f172a;">${dist.name}</b>
+                <span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 12px; background: ${color}20; color: ${color};">${dist.riskLevel} Risk</span>
+              </div>
+              <div style="font-size: 11px; color: #475569; line-height: 1.5; margin-bottom: 8px;">
+                <div><b>Reported:</b> ${dist.reportedCrimes} | <b>Solved:</b> ${dist.solvedCrimes}</div>
+                <div><b>Police Stations:</b> ${dist.policeStationsCount}</div>
+                <div style="color: #2563eb; font-weight: 600; margin-top: 3px;">📞 ${dist.emergencyHelpline}</div>
+              </div>
+            </div>
+          `;
+          marker.bindPopup(popupContent);
+
+          marker.on('click', () => {
+            onSelectDistrict(dist);
+          });
+        });
+
+        // If a specific district is chosen, fly directly to it
+        if (selectedDistrict && selectedDistrict.coordinates) {
+          mapInstanceRef.current.flyTo(selectedDistrict.coordinates, 10, { duration: 1.2 });
+        } else if (selectedState.centerCoordinates) {
+          mapInstanceRef.current.flyTo(selectedState.centerCoordinates, 7.5, { duration: 1.2 });
+        }
+      }
+    } else {
+      // 2. National View: Render all State HQ Markers
+      statesList.forEach(st => {
+        if (!st.centerCoordinates || st.centerCoordinates.length !== 2) return;
+        const [lat, lon] = st.centerCoordinates;
+        const color = getPinColor(st.riskLevel);
+
+        const customIcon = L.divIcon({
+          className: 'custom-state-pin',
+          html: `
+            <div style="position: relative; display: flex; flex-direction: column; align-items: center; cursor: pointer; transform: translate(-50%, -100%);">
+              <div style="
+                background: #0f172a;
+                color: white;
+                font-weight: 800;
+                font-size: 11px;
+                padding: 4px 9px;
+                border-radius: 20px;
+                border: 2px solid ${color};
+                box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                white-space: nowrap;
+              ">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: ${color};"></span>
+                <span>${st.name}</span>
+              </div>
+              <div style="
+                width: 0; 
+                height: 0; 
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 6px solid #0f172a;
+              "></div>
+            </div>
+          `,
+          iconSize: [0, 0]
+        });
+
+        const marker = L.marker([lat, lon], { icon: customIcon }).addTo(markersLayer);
+
+        marker.on('click', () => {
+          onSelectState(st);
+          if (st.districts && st.districts.length > 0) {
+            onSelectDistrict(st.districts[0]);
+          }
+        });
+      });
+
+      mapInstanceRef.current.flyTo([22.5937, 78.9629], 5, { duration: 1.0 });
+    }
+  }, [selectedState, selectedDistrict, statesList]);
 
   const handleLocateMe = async () => {
     setIsLocating(true);
@@ -287,19 +266,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
     }
   };
 
-  // Find currently active state object from statesList
-  const activeStateData = useMemo(() => {
-    return statesList.find(s => s.id === (selectedState?.id || hoveredStateId)) || selectedState;
-  }, [statesList, selectedState, hoveredStateId]);
-
-  // Filter districts within active state
-  const activeDistricts = useMemo(() => {
-    if (!selectedState || !selectedState.districts) return [];
-    if (riskFilter === 'all') return selectedState.districts;
-    return selectedState.districts.filter(d => d.riskLevel === riskFilter);
-  }, [selectedState, riskFilter]);
-
-  // Search filter
+  // Search matches
   const searchMatches = useMemo(() => {
     if (!mapSearch.trim()) return [];
     const query = mapSearch.toLowerCase();
@@ -320,26 +287,61 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
     return results.slice(0, 8);
   }, [mapSearch, statesList]);
 
+  // Active filtered districts in the right panel
+  const activeDistricts = useMemo(() => {
+    if (!selectedState || !selectedState.districts) return [];
+    if (riskFilter === 'all') return selectedState.districts;
+    return selectedState.districts.filter(d => d.riskLevel === riskFilter);
+  }, [selectedState, riskFilter]);
+
   return (
     <div className="bg-white rounded-3xl p-4 sm:p-7 shadow-sm border border-slate-200 my-6">
       
-      {/* 1. Header Bar with Search & Controls */}
+      {/* 1. Header Bar with Search, Layers & Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold tracking-wider uppercase border border-blue-200">
-              Official Geospatial Crime &amp; Safety Map
+              Live Google-Calibrated GIS Map
             </span>
-            <span className="text-slate-400 text-xs hidden sm:inline">• Click any State or District to filter</span>
+            <span className="text-slate-400 text-xs hidden sm:inline">• Real street, satellite &amp; district boundaries</span>
           </div>
           <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <span>India Real-Time Crime &amp; District Safety Explorer</span>
+            <span>India Real-Time Crime &amp; District Safety Map</span>
           </h3>
         </div>
 
-        {/* Search & Location Tools */}
+        {/* Tools: Style switcher, Search & Auto-Locate */}
         <div className="flex items-center gap-2 flex-wrap relative">
           
+          {/* Map Layer Switcher */}
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200 text-xs">
+            <button
+              onClick={() => setMapStyle('streets')}
+              className={`px-3 py-1 rounded-full font-bold transition-all cursor-pointer ${
+                mapStyle === 'streets' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              🗺️ Streets
+            </button>
+            <button
+              onClick={() => setMapStyle('satellite')}
+              className={`px-3 py-1 rounded-full font-bold transition-all cursor-pointer ${
+                mapStyle === 'satellite' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              🛰️ Satellite
+            </button>
+            <button
+              onClick={() => setMapStyle('dark')}
+              className={`px-3 py-1 rounded-full font-bold transition-all cursor-pointer ${
+                mapStyle === 'dark' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              🌙 Dark
+            </button>
+          </div>
+
           {/* Instant Search Bar */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -348,7 +350,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
               value={mapSearch}
               onChange={(e) => setMapSearch(e.target.value)}
               placeholder="Search Banka, Patna, Mumbai..."
-              className="pl-8 pr-3 py-1.5 bg-slate-100 text-slate-900 text-xs rounded-full border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 w-52"
+              className="pl-8 pr-3 py-1.5 bg-slate-100 text-slate-900 text-xs rounded-full border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 w-48 sm:w-56"
             />
             {mapSearch && (
               <button 
@@ -394,10 +396,10 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
             onClick={handleLocateMe}
             disabled={isLocating}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
-            title="Auto-detect and zoom to my physical district"
+            title="Auto-detect and fly to my physical district"
           >
             <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
-            <span>{isLocating ? 'Detecting...' : 'Locate My District'}</span>
+            <span>{isLocating ? 'Locating...' : 'Locate Me'}</span>
           </button>
 
           {/* Reset All India Button */}
@@ -407,14 +409,14 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
               className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Reset All India</span>
+              <span>All India</span>
             </button>
           )}
 
         </div>
       </div>
 
-      {/* 2. Map Legend & Live NCRB Indicator */}
+      {/* 2. Map Legend */}
       <div className="flex items-center justify-between flex-wrap gap-3 py-3 border-b border-slate-100 text-xs">
         <div className="flex items-center gap-4 flex-wrap">
           <span className="font-semibold text-slate-500 text-[11px]">Risk Intensity:</span>
@@ -434,181 +436,24 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
 
         <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-          <span>Live 112 &amp; Verified State Police Feeds</span>
+          <span>Real-World GPS Coordinates &amp; State Police Feeds</span>
         </div>
       </div>
 
-      {/* 3. Main Grid: Accurate Vector Map (Left) & District Detail Explorer (Right) */}
+      {/* 3. Main Grid: Real Leaflet Map (Left) & District Explorer Dashboard (Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-5">
         
-        {/* Left: Vector Map Canvas */}
-        <div className="lg:col-span-7 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-800 relative overflow-hidden flex flex-col justify-between min-h-[480px]">
-          
-          {/* Subtle Map Grid Background */}
-          <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
+        {/* Left: Real Leaflet Map Container */}
+        <div className="lg:col-span-7 rounded-3xl overflow-hidden shadow-xl border border-slate-200 relative min-h-[500px] flex flex-col justify-between">
+          <div ref={mapContainerRef} className="w-full h-full min-h-[500px] z-10" />
 
-          {/* Map Status Badge */}
-          <div className="relative z-10 flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-blue-500" />
-                {selectedState ? `${selectedState.name} District Grid` : 'National State Matrix'}
-              </span>
-              {selectedDistrict && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-600/30 text-blue-300 border border-blue-500/40">
-                  📍 {selectedDistrict.name}
-                </span>
-              )}
-            </div>
-
-            <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
-              Click state polygon to zoom &amp; inspect districts
+          {/* Floating Map Controls Overlays */}
+          <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-lg border border-slate-200 text-xs font-bold text-slate-800 flex items-center gap-2 pointer-events-none">
+            <Compass className="w-4 h-4 text-blue-600 animate-spin" />
+            <span>
+              {selectedState ? `${selectedState.name} (${selectedState.districts.length} Districts)` : 'All India National Overview'}
             </span>
           </div>
-
-          {/* SVG Map of India */}
-          <div className="relative w-full aspect-square max-h-[460px] mx-auto flex items-center justify-center">
-            <svg 
-              viewBox="0 0 1000 1100" 
-              className="w-full h-full filter drop-shadow-2xl select-none"
-            >
-              <defs>
-                <filter id="mapGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="8" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-                <linearGradient id="selectedGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#3b82f6" />
-                  <stop offset="100%" stop-color="#1d4ed8" />
-                </linearGradient>
-              </defs>
-
-              {/* National Outer Border Halo */}
-              <path 
-                d="M 210 110 C 310 50 420 220 535 375 C 655 390 890 340 890 410 C 860 470 690 580 635 605 C 515 700 415 975 340 1020 C 275 890 195 580 75 490 C 140 320 210 110 210 110 Z" 
-                fill="none" 
-                stroke="#334155" 
-                strokeWidth="4" 
-                strokeDasharray="6 6"
-                opacity="0.4" 
-              />
-
-              {/* Render Every State Polygon */}
-              {INDIA_GEO_MAP_DATA.map((geo) => {
-                const stateData = statesList.find(s => s.id === geo.id);
-                const isSelected = selectedState?.id === geo.id;
-                const isHovered = hoveredStateId === geo.id;
-                const fillColor = getRiskColor(stateData?.riskLevel, isHovered, isSelected);
-
-                return (
-                  <g 
-                    key={geo.id}
-                    className="cursor-pointer transition-all duration-200"
-                    onMouseEnter={() => setHoveredStateId(geo.id)}
-                    onMouseLeave={() => setHoveredStateId(null)}
-                    onClick={() => {
-                      if (stateData) {
-                        onSelectState(stateData);
-                        if (stateData.districts && stateData.districts.length > 0) {
-                          onSelectDistrict(stateData.districts[0]);
-                        } else {
-                          onSelectDistrict(null);
-                        }
-                      }
-                    }}
-                  >
-                    {/* State Geo Polygon */}
-                    <path
-                      d={geo.svgD}
-                      fill={isSelected ? 'url(#selectedGrad)' : fillColor}
-                      fillOpacity={isSelected ? 0.95 : isHovered ? 0.85 : 0.65}
-                      stroke={isSelected ? '#ffffff' : '#0f172a'}
-                      strokeWidth={isSelected ? 3.5 : 2}
-                      className="transition-all duration-200 hover:scale-[1.01]"
-                      filter={isSelected ? 'url(#mapGlow)' : undefined}
-                    />
-
-                    {/* State Code Label */}
-                    <text
-                      x={geo.cx}
-                      y={geo.cy}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                      className={`text-[16px] sm:text-[18px] font-black pointer-events-none select-none tracking-wider ${
-                        isSelected ? 'fill-white' : 'fill-slate-900'
-                      }`}
-                      style={{ fontWeight: 900 }}
-                    >
-                      {geo.code}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {/* Render District Pins if State is Selected */}
-              {selectedState && selectedState.districts && selectedState.districts.map((dist) => {
-                const isDistrictSelected = selectedDistrict?.id === dist.id;
-                const [lat, lon] = dist.coordinates;
-                const { x, y } = getCanvasCoords(lat, lon);
-
-                return (
-                  <g 
-                    key={dist.id} 
-                    className="cursor-pointer transition-transform duration-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectDistrict(dist);
-                    }}
-                  >
-                    {/* Pulsing Target Circle */}
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r={isDistrictSelected ? 12 : 7}
-                      fill={isDistrictSelected ? '#38bdf8' : '#ffffff'}
-                      fillOpacity={isDistrictSelected ? 0.9 : 0.7}
-                      stroke="#0f172a"
-                      strokeWidth="2"
-                      className={isDistrictSelected ? 'animate-pulse' : ''}
-                    />
-
-                    {/* Pin Center */}
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r={isDistrictSelected ? 5 : 3}
-                      fill={isDistrictSelected ? '#1e3a8a' : '#0f172a'}
-                    />
-
-                    {/* District Name Label */}
-                    <text
-                      x={x}
-                      y={y - 14}
-                      textAnchor="middle"
-                      className={`text-[12px] sm:text-[13px] font-bold select-none pointer-events-none ${
-                        isDistrictSelected ? 'fill-amber-300' : 'fill-white'
-                      }`}
-                      style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
-                    >
-                      {dist.name}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-
-          {/* Interactive Footer Indicator */}
-          <div className="relative z-10 pt-2 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-blue-400 font-semibold">
-              <Info className="w-3.5 h-3.5" />
-              <span>
-                {selectedState ? `Showing ${selectedState.districts.length} active districts in ${selectedState.name}` : 'Click any state to explore district-level police stats'}
-              </span>
-            </span>
-            <span className="text-slate-500">Pramaan Bharat GIS v2.4</span>
-          </div>
-
         </div>
 
         {/* Right: District Explorer Dashboard Panel */}
@@ -689,7 +534,12 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
                     return (
                       <div
                         key={dist.id}
-                        onClick={() => onSelectDistrict(dist)}
+                        onClick={() => {
+                          onSelectDistrict(dist);
+                          if (dist.coordinates && mapInstanceRef.current) {
+                            mapInstanceRef.current.flyTo(dist.coordinates, 10, { duration: 1.2 });
+                          }
+                        }}
                         className={`p-3 rounded-2xl border transition-all cursor-pointer ${
                           isDistSelected
                             ? 'bg-blue-600 text-white border-blue-700 shadow-md ring-2 ring-blue-400/30'
@@ -763,7 +613,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
               <div>
                 <h4 className="text-base font-black text-slate-900">Select any Indian State on the Map</h4>
                 <p className="text-xs text-slate-500 max-w-xs mt-1 leading-relaxed">
-                  Click on any state polygon or search above to drill down into district-level crime data, police station helplines, and localized safety metrics.
+                  Click on any state pin or search above to zoom in directly to district-level crime data, police stations, and localized safety metrics.
                 </p>
               </div>
 
