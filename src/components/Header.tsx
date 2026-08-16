@@ -14,7 +14,8 @@ import {
   Compass,
   Lock,
   ChevronDown,
-  Crown
+  Crown,
+  X
 } from 'lucide-react';
 import { StateInfo, DistrictInfo, LanguageCode, NewsCategory, AuthorizedOfficer } from '../types';
 import { AVAILABLE_LANGUAGES } from '../data/communityData';
@@ -103,37 +104,49 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'Health & Climate', label: 'Health & Weather' }
   ];
 
+  const currentLocationLabel = selectedDistrict 
+    ? selectedDistrict.name 
+    : selectedState 
+      ? selectedState.name 
+      : 'All India';
+
+  const currentLanguageName = AVAILABLE_LANGUAGES.find(l => l.code === currentLanguage)?.nativeName || 'English';
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
-      {/* Top utility bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        
+        {/* === MAIN HEADER ROW === */}
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4">
           
           {/* Logo & Brand */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => { onSelectCategory('All'); onSelectState(null); }}>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-600 via-white to-emerald-600 p-[2px] shadow-sm flex items-center justify-center">
-                <div className="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center">
-                  <span className="text-white font-black text-lg tracking-tighter">PB</span>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div 
+              className="flex items-center gap-2 cursor-pointer" 
+              onClick={() => { onSelectCategory('All'); onSelectState(null); onSelectDistrict(null); }}
+            >
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-orange-600 via-white to-emerald-600 p-[2px] shadow-xs flex items-center justify-center">
+                <div className="w-full h-full bg-slate-900 rounded-[9px] flex items-center justify-center">
+                  <span className="text-white font-black text-sm sm:text-base tracking-tighter">PB</span>
                 </div>
               </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-xl tracking-tight text-slate-900">
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <span className="font-extrabold text-base sm:text-xl tracking-tight text-slate-900">
                     Pramaan<span className="text-blue-600">Bharat</span>
                   </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                    Verified News & Safety
+                  <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 border border-blue-200 hidden sm:inline-block">
+                    Verified
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-500 hidden sm:inline-block font-medium">
+                <span className="text-[10px] text-slate-500 hidden md:inline-block font-medium">
                   {istTime || 'New Delhi, India'}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Search bar */}
+          {/* Desktop Search bar */}
           <div className="flex-1 max-w-xl hidden md:block">
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -156,9 +169,8 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Action buttons & Utilities */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-
+          {/* Desktop Action Buttons (> 768px) */}
+          <div className="hidden md:flex items-center gap-2 lg:gap-2.5 shrink-0">
             {/* AI Safety Advisor Button */}
             <button
               id="ai-safety-briefing-btn"
@@ -170,7 +182,7 @@ export const Header: React.FC<HeaderProps> = ({
               <span>AI Safety Advisor</span>
             </button>
 
-            {/* Language Selector */}
+            {/* Language Selector Desktop */}
             <div className="relative">
               <button
                 id="language-selector-btn"
@@ -178,9 +190,7 @@ export const Header: React.FC<HeaderProps> = ({
                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium transition-colors cursor-pointer"
               >
                 <Globe className="w-3.5 h-3.5 text-slate-500" />
-                <span className="hidden sm:inline">
-                  {AVAILABLE_LANGUAGES.find(l => l.code === currentLanguage)?.nativeName || 'English'}
-                </span>
+                <span>{currentLanguageName}</span>
                 <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 
@@ -208,18 +218,16 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* Location Quick Switcher */}
+            {/* Location Quick Switcher Desktop */}
             <div className="relative">
               <button
                 id="location-selector-btn"
                 onClick={() => { setShowLocationDropdown(!showLocationDropdown); setShowLangDropdown(false); }}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold transition-colors cursor-pointer max-w-[150px]"
               >
-                <MapPin className="w-3.5 h-3.5 text-blue-600" />
-                <span className="max-w-[100px] sm:max-w-[130px] truncate">
-                  {selectedDistrict ? selectedDistrict.name : selectedState ? selectedState.name : 'All India'}
-                </span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
+                <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span className="truncate">{currentLocationLabel}</span>
+                <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
               </button>
 
               {showLocationDropdown && (
@@ -271,7 +279,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* Bookmarks Toggle */}
+            {/* Bookmarks Toggle Desktop */}
             <button
               id="bookmarks-toggle-btn"
               onClick={onToggleBookmarksView}
@@ -288,7 +296,7 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* AI Subscription / Quota Badge */}
+            {/* AI Subscription / Quota Badge Desktop */}
             <button
               id="subscription-tier-btn"
               onClick={onOpenSubscriptionModal}
@@ -302,30 +310,28 @@ export const Header: React.FC<HeaderProps> = ({
               {subscription.isPro ? (
                 <>
                   <Crown className="w-3.5 h-3.5 fill-white text-white" />
-                  <span className="hidden sm:inline">PRO ACTIVE</span>
-                  <span className="sm:hidden">PRO</span>
+                  <span>PRO ACTIVE</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-                  <span className="hidden sm:inline">AI Credits: {subscription.aiCreditsRemaining}/{subscription.dailyAiQuota}</span>
-                  <span className="sm:hidden">{subscription.aiCreditsRemaining} AI</span>
+                  <span>AI: {subscription.aiCreditsRemaining}/{subscription.dailyAiQuota}</span>
                 </>
               )}
             </button>
 
-            {/* Emergency Helplines Modal Trigger */}
+            {/* Emergency Helplines Modal Trigger Desktop */}
             <button
               id="emergency-directory-btn"
               onClick={onOpenEmergencyModal}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-semibold transition-colors cursor-pointer"
               title="Emergency Indian Helplines (112 / 1930 / 1090)"
             >
-              <PhoneCall className="w-3.5 h-3.5 text-rose-600 animate-bounce" />
-              <span className="hidden md:inline">112 SOS</span>
+              <PhoneCall className="w-3.5 h-3.5 text-rose-600" />
+              <span>112 SOS</span>
             </button>
 
-            {/* Police / Law Enforcement Authorized Vault */}
+            {/* Police / Law Enforcement Authorized Vault Desktop */}
             <button
               id="police-portal-auth-btn"
               onClick={onOpenPolicePortal}
@@ -339,35 +345,217 @@ export const Header: React.FC<HeaderProps> = ({
               {authorizedOfficer ? (
                 <>
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="hidden sm:inline">Officer {authorizedOfficer.rank}</span>
+                  <span>Officer</span>
                 </>
               ) : (
                 <>
                   <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden sm:inline">Police Vault</span>
+                  <span>Police</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Mobile Right Quick Action Group (< 768px) */}
+          <div className="flex md:hidden items-center gap-1.5 shrink-0">
+            {/* AI Credit / Pro Button Mobile */}
+            <button
+              id="mobile-subscription-btn"
+              onClick={onOpenSubscriptionModal}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
+                subscription.isPro
+                  ? 'bg-gradient-to-r from-amber-500 to-amber-600 border-amber-600 text-white'
+                  : 'bg-blue-50 border-blue-200 text-blue-800'
+              }`}
+            >
+              {subscription.isPro ? (
+                <>
+                  <Crown className="w-3 h-3 fill-white text-white" />
+                  <span>PRO</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3 h-3 text-blue-600" />
+                  <span>{subscription.aiCreditsRemaining} AI</span>
+                </>
+              )}
+            </button>
+
+            {/* Bookmarks Mobile */}
+            <button
+              onClick={onToggleBookmarksView}
+              className={`p-1.5 rounded-lg border text-xs transition-colors relative cursor-pointer ${
+                isBookmarksView ? 'bg-blue-50 border-blue-300 text-blue-600' : 'border-slate-200 bg-white text-slate-700'
+              }`}
+              title="Saved"
+            >
+              <Bookmark className={`w-3.5 h-3.5 ${bookmarkedCount > 0 ? 'fill-blue-500 text-blue-500' : ''}`} />
+              {bookmarkedCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-600 text-white rounded-full text-[8px] font-bold flex items-center justify-center">
+                  {bookmarkedCount}
+                </span>
+              )}
+            </button>
+
+            {/* 112 SOS Mobile */}
+            <button
+              onClick={onOpenEmergencyModal}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold"
+              title="Emergency 112"
+            >
+              <PhoneCall className="w-3 h-3 text-rose-600" />
+              <span>112</span>
+            </button>
+          </div>
+
+        </div>
+
+        {/* === MOBILE SUB-HEADER BAR (< 768px) with Quick Region / Edition / Police Controls === */}
+        <div className="block md:hidden pb-2.5 space-y-2">
+          
+          {/* Quick Selectors Row */}
+          <div className="grid grid-cols-3 gap-1.5">
+            
+            {/* Mobile Region Button */}
+            <div className="relative">
+              <button
+                onClick={() => { setShowLocationDropdown(!showLocationDropdown); setShowLangDropdown(false); }}
+                className="w-full flex items-center justify-between gap-1 px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-[11px] font-semibold"
+              >
+                <div className="flex items-center gap-1 truncate">
+                  <MapPin className="w-3 h-3 text-blue-600 shrink-0" />
+                  <span className="truncate">{currentLocationLabel}</span>
+                </div>
+                <ChevronDown className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+              </button>
+
+              {showLocationDropdown && (
+                <div className="fixed inset-x-3 top-28 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-50 text-xs max-h-72 overflow-y-auto">
+                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between border-b border-slate-100 pb-2 mb-1">
+                    <span>Select Region</span>
+                    <button 
+                      onClick={() => { onSelectState(null); onSelectDistrict(null); setShowLocationDropdown(false); }}
+                      className="text-blue-600 font-bold"
+                    >
+                      Reset to All India
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => { onSelectState(null); onSelectDistrict(null); setShowLocationDropdown(false); }}
+                    className={`w-full text-left px-3 py-2 flex items-center gap-2 ${!selectedState ? 'text-blue-600 bg-blue-50 font-bold' : 'text-slate-700'}`}
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>All India (National Overview)</span>
+                  </button>
+                  {statesList.map(st => (
+                    <button
+                      key={st.id}
+                      onClick={() => {
+                        onSelectState(st);
+                        onSelectDistrict(null);
+                        setShowLocationDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 flex items-center justify-between border-t border-slate-50 ${
+                        selectedState?.id === st.id && !selectedDistrict ? 'text-blue-600 bg-blue-50 font-bold' : 'text-slate-700'
+                      }`}
+                    >
+                      <span>{st.name} ({st.code})</span>
+                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold ${
+                        st.riskLevel === 'High' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-800'
+                      }`}>
+                        {st.riskLevel}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Language Button */}
+            <div className="relative">
+              <button
+                onClick={() => { setShowLangDropdown(!showLangDropdown); setShowLocationDropdown(false); }}
+                className="w-full flex items-center justify-between gap-1 px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-[11px] font-semibold"
+              >
+                <div className="flex items-center gap-1 truncate">
+                  <Globe className="w-3 h-3 text-slate-500 shrink-0" />
+                  <span className="truncate">{currentLanguageName}</span>
+                </div>
+                <ChevronDown className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+              </button>
+
+              {showLangDropdown && (
+                <div className="fixed inset-x-3 top-28 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-50 text-xs max-h-72 overflow-y-auto">
+                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2 mb-1">
+                    Select Language Edition
+                  </div>
+                  {AVAILABLE_LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        onChangeLanguage(lang.code as LanguageCode);
+                        setShowLangDropdown(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 flex items-center justify-between border-b border-slate-50 ${
+                        currentLanguage === lang.code ? 'text-blue-600 bg-blue-50 font-bold' : 'text-slate-700'
+                      }`}
+                    >
+                      <span>{lang.name}</span>
+                      <span className="text-slate-400">{lang.nativeName}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Police Vault Button */}
+            <button
+              onClick={onOpenPolicePortal}
+              className={`flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border text-[11px] font-bold ${
+                authorizedOfficer
+                  ? 'bg-slate-900 text-emerald-400 border-slate-950'
+                  : 'bg-slate-900 text-white border-slate-800'
+              }`}
+            >
+              {authorizedOfficer ? (
+                <>
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                  <span>Officer</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-3 h-3 text-amber-400" />
+                  <span>Police</span>
                 </>
               )}
             </button>
 
           </div>
-        </div>
 
-        {/* Mobile Search input */}
-        <div className="block md:hidden pb-3">
+          {/* Mobile Search input */}
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search Indian news, police archives, cyber alerts..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-100 text-slate-900 text-xs rounded-full border border-slate-200 focus:outline-hidden"
+              placeholder="Search news, cyber alerts, state, district..."
+              className="w-full pl-8 pr-7 py-1.5 bg-slate-100 text-slate-900 text-xs rounded-full border border-slate-200 focus:outline-hidden"
             />
+            {searchQuery && (
+              <button 
+                onClick={() => onSearchChange('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
+
         </div>
 
-        {/* Category Navigation Pills (Google News Style) */}
-        <nav className="flex items-center gap-1.5 overflow-x-auto py-2.5 scrollbar-none border-t border-slate-100 text-xs font-medium">
+        {/* === CATEGORY NAVIGATION PILLS BAR === */}
+        <nav className="flex items-center gap-1.5 overflow-x-auto py-2 scrollbar-none border-t border-slate-100 text-xs font-medium">
           {categories.map((cat) => {
             const isActive = activeCategory === cat.id && !isBookmarksView;
             return (
@@ -375,9 +563,9 @@ export const Header: React.FC<HeaderProps> = ({
                 key={cat.id}
                 id={`cat-nav-${cat.id.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
                 onClick={() => onSelectCategory(cat.id)}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full whitespace-nowrap transition-all duration-150 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full whitespace-nowrap transition-all duration-150 cursor-pointer ${
                   isActive
-                    ? 'bg-blue-600 text-white font-bold shadow-sm ring-2 ring-blue-500/30'
+                    ? 'bg-blue-600 text-white font-bold shadow-2xs ring-2 ring-blue-500/30'
                     : 'text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 font-medium'
                 }`}
               >
@@ -391,10 +579,11 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             id="customize-feed-pill"
             onClick={onOpenPersonalizeModal}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full whitespace-nowrap text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-dashed border-slate-300 ml-auto text-xs transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full whitespace-nowrap text-slate-600 hover:text-blue-600 hover:bg-blue-50 border border-dashed border-slate-300 ml-auto text-xs transition-colors cursor-pointer shrink-0"
           >
             <SlidersHorizontal className="w-3 h-3" />
-            <span>Customize Topics</span>
+            <span className="hidden sm:inline">Customize Topics</span>
+            <span className="sm:hidden">Topics</span>
           </button>
         </nav>
 
