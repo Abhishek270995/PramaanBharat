@@ -348,15 +348,15 @@ export const Header: React.FC<HeaderProps> = ({
               <span>112 SOS</span>
             </button>
 
-            {/* Official Police & Citizen Portals Directory Desktop */}
+            {/* Official Government & Police Portals Directory Desktop */}
             <button
               id="police-directory-btn"
               onClick={onOpenPolicePortal}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
-              title="Official National & State Police Portals, e-FIR, CCTNS & Cyber Crime Reporting"
+              title="Official Government & State Police Portals, e-FIR, CCTNS & Cyber Crime (1930)"
             >
               <Building2 className="w-3.5 h-3.5 text-blue-400" />
-              <span>Police Portals</span>
+              <span>Govt Portals</span>
             </button>
           </div>
 

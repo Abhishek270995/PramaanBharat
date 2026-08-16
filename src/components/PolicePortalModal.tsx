@@ -210,7 +210,7 @@ export const PolicePortalModal: React.FC<PolicePortalModalProps> = ({
           </div>
 
           <h3 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-            <span>Official Police &amp; Citizen Portals</span>
+            <span>Official Government &amp; Police Portals</span>
           </h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xl leading-relaxed">
             Verified direct links to Ministry of Home Affairs (MHA), National Cybercrime Portal, CCTNS Citizen Desks, and State Police e-FIR Portals across India.
