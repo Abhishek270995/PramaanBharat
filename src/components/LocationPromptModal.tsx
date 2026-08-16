@@ -29,13 +29,9 @@ export const LocationPromptModal: React.FC<LocationPromptModalProps> = ({
       setIsDetecting(false);
       onLocationDetected(result);
       onClose();
-    } catch (err: any) {
+    } catch {
       setIsDetecting(false);
-      setErrorMessage(
-        err.code === 1 
-          ? 'Location access was denied. You can still select your state from the region menu anytime.'
-          : 'Could not detect exact location. You can select your region manually.'
-      );
+      onClose();
     }
   };
 
