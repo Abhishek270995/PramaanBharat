@@ -172,7 +172,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
   };
 
   return (
-    <section className="my-8">
+    <section className="my-8" id="news-feed-section">
       
       {/* Feed Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-200">
@@ -467,6 +467,24 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
               onQuickAiSummary={onQuickAiSummary}
             />
           ))}
+        </div>
+      ) : isBookmarksView ? (
+        <div className="bg-slate-50 rounded-3xl p-10 text-center border border-slate-200 my-8">
+          <div className="w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-4">
+            <Bookmark className="w-8 h-8 fill-blue-600/30" />
+          </div>
+          <h4 className="text-lg font-bold text-slate-900">No saved articles yet</h4>
+          <p className="text-xs text-slate-500 max-w-md mx-auto mt-1.5 leading-relaxed">
+            You have not bookmarked any stories yet. Click the bookmark icon on any verified article or public safety advisory to save it for quick reference anytime.
+          </p>
+          <div className="flex items-center justify-center gap-3 mt-5">
+            <button
+              onClick={handleClearAll}
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+            >
+              Browse Top Indian Stories &amp; Safety Bulletins
+            </button>
+          </div>
         </div>
       ) : (
         <div className="bg-slate-50 rounded-3xl p-10 text-center border border-slate-200 my-8">

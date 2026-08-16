@@ -84,7 +84,14 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState<NewsCategory>('All');
   const [selectedCrimeCategory, setSelectedCrimeCategory] = useState<CrimeCategory | null>(null);
   const [authorizedOfficer, setAuthorizedOfficer] = useState<AuthorizedOfficer | null>(null);
-  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(['news-101']);
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('pramaan_bookmarked_ids');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isBookmarksView, setIsBookmarksView] = useState<boolean>(false);
   const [allArticles, setAllArticles] = useState<NewsArticle[]>(NEWS_ARTICLES);
   const [isFetchingLiveNews, setIsFetchingLiveNews] = useState<boolean>(false);
@@ -181,9 +188,32 @@ export default function App() {
   }, []);
 
   const handleToggleBookmark = (id: string) => {
-    setBookmarkedIds(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
+    setBookmarkedIds(prev => {
+      const updated = prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id];
+      try {
+        localStorage.setItem('pramaan_bookmarked_ids', JSON.stringify(updated));
+      } catch {
+        // silent
+      }
+      return updated;
+    });
+  };
+
+  const handleToggleBookmarksView = () => {
+    if (isBookmarksView) {
+      setIsBookmarksView(false);
+    } else {
+      setIsBookmarksView(true);
+      setActiveHomeTab('news');
+      setTimeout(() => {
+        const newsEl = document.getElementById('news-feed-section');
+        if (newsEl) {
+          newsEl.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          window.scrollTo({ top: 180, behavior: 'smooth' });
+        }
+      }, 50);
+    }
   };
 
   const handleResetFilters = () => {
@@ -307,7 +337,7 @@ export default function App() {
         onOpenSubscriptionModal={() => setIsSubscriptionModalOpen(true)}
         subscription={subscription}
         bookmarkedCount={bookmarkedIds.length}
-        onToggleBookmarksView={() => setIsBookmarksView(!isBookmarksView)}
+        onToggleBookmarksView={handleToggleBookmarksView}
         isBookmarksView={isBookmarksView}
         onOpenLocationPrompt={() => setIsLocationPromptOpen(true)}
       />
