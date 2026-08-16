@@ -18,11 +18,12 @@ import {
   ShieldCheck,
   Award,
   Scale,
-  CheckCircle2
+  CheckCircle2,
+  ExternalLink
 } from 'lucide-react';
 import { NewsArticle, LanguageCode, NewsCategory, StateInfo, DistrictInfo, CrimeCategory, TimeRangeKey, SourceTier } from '../types';
 import { ArticleCard } from './ArticleCard';
-import { isArticleInTimeRange, getTimeframeLabel } from '../utils/dateUtils';
+import { isArticleInTimeRange, getTimeframeLabel, getLiveTimeAgo } from '../utils/dateUtils';
 import { VERIFIED_SOURCES_CATALOG, getSourceByName } from '../data/verifiedSources';
 import { VerifiedSourcesModal } from './VerifiedSourcesModal';
 
@@ -78,6 +79,15 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
   const [isVerifiedSourcesModalOpen, setIsVerifiedSourcesModalOpen] = useState<boolean>(false);
   const [breakingSlideIndex, setBreakingSlideIndex] = useState<number>(0);
   const [isHeroHovered, setIsHeroHovered] = useState<boolean>(false);
+  const [elapsedMinutes, setElapsedMinutes] = useState<number>(0);
+
+  // Live timer heartbeat every 30 seconds to update relative time across the page dynamically
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsedMinutes(prev => prev + 1);
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   // First apply timeframe filter to base article set
   const timeframeArticles = isBookmarksView 
@@ -173,26 +183,43 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
     searchQuery
   ]);
 
-  // Multi-slide breaking news pool
+  // Multi-slide breaking news pool with 6-8 verified top slides
   const breakingPool = useMemo(() => {
     if (isBookmarksView || searchQuery || selectedSourceFilter !== 'All' || selectedTierFilter !== 'All') {
       return [];
     }
 
-    // 1. Direct breaking articles within current filtered set
-    const directBreaking = filtered.filter(a => a.isBreaking);
-    if (directBreaking.length > 0) {
-      return directBreaking.slice(0, 6);
+    // 1. If location filter is active, pick all breaking or top stories for that location
+    if (selectedState || selectedDistrict) {
+      const locationBreaking = filtered.filter(a => a.isBreaking);
+      if (locationBreaking.length >= 3) return locationBreaking.slice(0, 6);
+      return filtered.slice(0, Math.min(6, filtered.length));
     }
 
-    // 2. If filtered has articles (e.g. for a state), pick top 3 stories as lead slides
-    if (filtered.length > 0 && (selectedState || selectedDistrict)) {
-      return filtered.slice(0, 3);
-    }
+    // 2. For All-India view: Pick high-impact verified news items from top wire & broadsheets
+    const pool: NewsArticle[] = [];
+    const seenIds = new Set<string>();
 
-    // 3. Fallback: all breaking articles across current timeframe
-    const allBreaking = timeframeArticles.filter(a => a.isBreaking);
-    return allBreaking.length > 0 ? allBreaking.slice(0, 6) : (filtered.length > 0 ? [filtered[0]] : []);
+    // First add explicit isBreaking articles
+    timeframeArticles.filter(a => a.isBreaking).forEach(a => {
+      if (!seenIds.has(a.id)) { pool.push(a); seenIds.add(a.id); }
+    });
+
+    // Next add top verified reports from major genuine sources across states to create 6-8 rich slides
+    timeframeArticles.filter(a => 
+      a.category === 'Public Safety & Crime' || 
+      a.category === 'National' || 
+      a.category === 'Tech' ||
+      a.sourceTier === 'Official Statutory & Wire' ||
+      a.sourceTier === 'Legal & Judicial Desk'
+    ).forEach(a => {
+      if (!seenIds.has(a.id) && pool.length < 8) {
+        pool.push(a);
+        seenIds.add(a.id);
+      }
+    });
+
+    return pool.length > 0 ? pool : timeframeArticles.slice(0, 6);
   }, [filtered, timeframeArticles, isBookmarksView, searchQuery, selectedSourceFilter, selectedTierFilter, selectedState, selectedDistrict]);
 
   // Reset slide index when location or category changes
@@ -524,7 +551,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
                 <div className="flex items-center gap-2 text-xs text-slate-400 mb-2 flex-wrap">
                   <span className="font-bold text-white">{activeBreakingArticle.source}</span>
                   <span>•</span>
-                  <span>{activeBreakingArticle.publishedAt}</span>
+                  <span className="text-amber-300 font-semibold">{getLiveTimeAgo(activeBreakingArticle.publishedAt, elapsedMinutes)}</span>
                   {activeBreakingArticle.stateName && (
                     <>
                       <span>•</span>
@@ -555,6 +582,28 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                     <span>AI 3-Point Summary</span>
                   </button>
+
+                  {/* Direct Redirection to Original News Publisher */}
+                  {(() => {
+                    const srcInfo = getSourceByName(activeBreakingArticle.source);
+                    const targetUrl = activeBreakingArticle.originalUrl || (srcInfo?.website ? `https://${srcInfo.website}` : null);
+                    if (targetUrl) {
+                      return (
+                        <a
+                          href={targetUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer"
+                          title={`Open official report on ${activeBreakingArticle.source} ↗`}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
+                          <span>Read on {activeBreakingArticle.source} ↗</span>
+                        </a>
+                      );
+                    }
+                    return null;
+                  })()}
 
                   <span className="text-xs text-slate-400">
                     ⏱️ {activeBreakingArticle.readTimeMinutes} min read
@@ -589,6 +638,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
               isBookmarked={bookmarkedIds.includes(article.id)}
               onToggleBookmark={onToggleBookmark}
               onQuickAiSummary={onQuickAiSummary}
+              elapsedMinutes={elapsedMinutes}
             />
           ))}
         </div>

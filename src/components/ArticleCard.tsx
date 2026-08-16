@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { NewsArticle, LanguageCode } from '../types';
 import { getSourceByName } from '../data/verifiedSources';
+import { getLiveTimeAgo } from '../utils/dateUtils';
 
 interface ArticleCardProps {
   article: NewsArticle;
@@ -21,6 +22,7 @@ interface ArticleCardProps {
   isBookmarked: boolean;
   onToggleBookmark: (articleId: string) => void;
   onQuickAiSummary: (article: NewsArticle) => void;
+  elapsedMinutes?: number;
 }
 
 export const ArticleCard: React.FC<ArticleCardProps> = ({
@@ -29,7 +31,8 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
   onSelectArticle,
   isBookmarked,
   onToggleBookmark,
-  onQuickAiSummary
+  onQuickAiSummary,
+  elapsedMinutes = 0
 }) => {
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
@@ -39,7 +42,10 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
 
   const handleSpeak = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!('speechSynthesis' in window)) return;
+    if (!('speechSynthesis' in window)) {
+      alert('Text-to-speech is not supported on this device/browser.');
+      return;
+    }
 
     if (isSpeaking) {
       window.speechSynthesis.cancel();
@@ -48,9 +54,9 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
     }
 
     window.speechSynthesis.cancel();
-    const textToSpeak = `${displayTitle}. Reported by ${article.source}. ${article.snippet}`;
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    const utterance = new SpeechSynthesisUtterance(`${displayTitle}. ${article.snippet}`);
     utterance.rate = 0.95;
+    utterance.lang = currentLanguage === 'hi' ? 'hi-IN' : 'en-IN';
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
     window.speechSynthesis.speak(utterance);
@@ -66,25 +72,56 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
         url: window.location.href
       }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(`${article.title} - Pramaan Bharat News`);
+      navigator.clipboard.writeText(`${article.title}\n\nRead more on PramaanBharat: ${window.location.href}`);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
+  const handleBookmark = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleBookmark(article.id);
+  };
+
+  const handleAiSummary = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onQuickAiSummary(article);
+  };
+
   return (
     <article
-      id={`article-card-${article.id}`}
       onClick={() => onSelectArticle(article)}
-      className="bg-white rounded-2xl border border-slate-200/90 hover:border-blue-400 hover:shadow-md transition-all p-4 sm:p-5 flex flex-col justify-between cursor-pointer group"
+      className="group bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs hover:shadow-lg hover:border-blue-300 transition-all duration-300 flex flex-col justify-between cursor-pointer"
     >
       <div>
         {/* Source & Credentials Bar */}
         <div className="flex items-center justify-between gap-2 mb-2.5 flex-wrap">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-bold text-xs text-slate-900 flex items-center gap-1">
-              {article.source}
-            </span>
+            {(() => {
+              const srcInfo = getSourceByName(article.source);
+              const targetUrl = article.originalUrl || (srcInfo?.website ? `https://${srcInfo.website}` : null);
+              if (targetUrl) {
+                return (
+                  <a
+                    href={targetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="font-bold text-xs text-slate-900 hover:text-blue-600 hover:underline flex items-center gap-1 transition-colors"
+                    title={`Open verified report on ${article.source} ↗`}
+                  >
+                    <span>{article.source}</span>
+                    <ExternalLink className="w-2.5 h-2.5 text-slate-400 group-hover:text-blue-500" />
+                  </a>
+                );
+              }
+              return (
+                <span className="font-bold text-xs text-slate-900 flex items-center gap-1">
+                  {article.source}
+                </span>
+              );
+            })()}
+
             {(() => {
               const srcInfo = getSourceByName(article.source);
               if (srcInfo?.tier) {
@@ -98,7 +135,7 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
             })()}
             <span className="text-slate-300">•</span>
             <span className="text-[11px] text-slate-500 font-medium">
-              {article.publishedAt}
+              {getLiveTimeAgo(article.publishedAt, elapsedMinutes)}
             </span>
           </div>
 

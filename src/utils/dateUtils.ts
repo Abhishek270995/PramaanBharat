@@ -182,3 +182,49 @@ export function getTimeframeLabel(
       return 'All Time';
   }
 }
+
+/**
+ * Calculates dynamically progressing relative time so '25 mins ago' advances in real-time
+ */
+export function getLiveTimeAgo(publishedAtStr: string, sessionElapsedMinutes: number = 0): string {
+  if (!publishedAtStr) return 'Just now';
+  
+  // If it's a fixed date like 'March 15, 2026' or '2026-05-19', leave intact
+  if (publishedAtStr.includes('202') || publishedAtStr.includes('Jan') || publishedAtStr.includes('Feb') || publishedAtStr.includes('Mar') || publishedAtStr.includes('Apr') || publishedAtStr.includes('May') || publishedAtStr.includes('Jun') || publishedAtStr.includes('Jul')) {
+    return publishedAtStr;
+  }
+
+  // Parse initial minutes or hours from relative string
+  let initialMinutes = 15;
+  const lower = publishedAtStr.toLowerCase();
+  
+  if (lower.includes('just now')) {
+    initialMinutes = 2;
+  } else {
+    const matchMin = lower.match(/(\d+)\s*min/);
+    if (matchMin && matchMin[1]) {
+      initialMinutes = parseInt(matchMin[1], 10);
+    } else {
+      const matchHr = lower.match(/(\d+)\s*hour/);
+      if (matchHr && matchHr[1]) {
+        initialMinutes = parseInt(matchHr[1], 10) * 60;
+      } else {
+        return publishedAtStr;
+      }
+    }
+  }
+
+  const totalMinutes = initialMinutes + sessionElapsedMinutes;
+  
+  if (totalMinutes < 1) return 'Just now';
+  if (totalMinutes < 60) return `${totalMinutes} mins ago`;
+  
+  const hours = Math.floor(totalMinutes / 60);
+  const remainingMins = totalMinutes % 60;
+  if (hours < 24) {
+    return hours === 1 ? (remainingMins > 0 ? `1h ${remainingMins}m ago` : '1 hour ago') : `${hours} hours ago`;
+  }
+  
+  const days = Math.floor(hours / 24);
+  return days === 1 ? '1 day ago' : `${days} days ago`;
+}

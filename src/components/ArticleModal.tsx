@@ -280,8 +280,8 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
         </div>
 
         {/* Interactive Bottom Bar */}
-        <div className="flex items-center justify-between pt-5 mt-5 border-t border-slate-200">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between pt-5 mt-5 border-t border-slate-200 flex-wrap gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={handleSpeak}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -299,6 +299,27 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
               <Share2 className="w-4 h-4" />
               <span>{copied ? 'Link Copied!' : 'Share'}</span>
             </button>
+
+            {/* Direct Official Source Link */}
+            {(() => {
+              const srcInfo = getSourceByName(article.source);
+              const targetUrl = article.originalUrl || (srcInfo?.website ? `https://${srcInfo.website}` : null);
+              if (targetUrl) {
+                return (
+                  <a
+                    href={targetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-colors cursor-pointer"
+                    title={`Open verified report on ${article.source}`}
+                  >
+                    <ExternalLink className="w-4 h-4 text-blue-600" />
+                    <span>Read on {article.source} ↗</span>
+                  </a>
+                );
+              }
+              return null;
+            })()}
           </div>
 
           <button
