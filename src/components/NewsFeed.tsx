@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Sparkles, 
   Flame, 
@@ -76,80 +76,80 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
   const [selectedSourceFilter, setSelectedSourceFilter] = useState<string>('All');
   const [selectedTierFilter, setSelectedTierFilter] = useState<string>('All');
   const [isVerifiedSourcesModalOpen, setIsVerifiedSourcesModalOpen] = useState<boolean>(false);
+  const [breakingSlideIndex, setBreakingSlideIndex] = useState<number>(0);
+  const [isHeroHovered, setIsHeroHovered] = useState<boolean>(false);
 
   // First apply timeframe filter to base article set
   const timeframeArticles = isBookmarksView 
     ? articles 
     : articles.filter(a => isArticleInTimeRange(a, timeKey, customStartDate, customEndDate));
 
-  // Category counts calculation helper based on current timeframe
-  const getCategoryCount = (catId: NewsCategory) => {
-    if (catId === 'All') return timeframeArticles.length;
-    if (catId === 'For You') {
-      return timeframeArticles.filter(a => 
-        a.category === 'Public Safety & Crime' || 
-        a.category === 'Tech' || 
-        a.isBreaking
-      ).length;
-    }
-    return timeframeArticles.filter(a => a.category === catId).length;
-  };
-
   // Filter logic
-  let filtered = timeframeArticles;
+  let filtered = useMemo(() => {
+    let list = timeframeArticles;
 
-  if (isBookmarksView) {
-    filtered = filtered.filter(a => bookmarkedIds.includes(a.id));
-  } else {
-    // Category filter
+    if (isBookmarksView) {
+      return list.filter(a => bookmarkedIds.includes(a.id));
+    }
+
+    // 1. State & District filter (strictly prioritized)
+    if (selectedDistrict) {
+      const districtMatches = list.filter(a => a.districtId === selectedDistrict.id);
+      const stateMatches = list.filter(a => a.stateId === (selectedDistrict.stateId || selectedState?.id));
+      if (districtMatches.length > 0) {
+        const otherStateMatches = stateMatches.filter(a => !districtMatches.some(dm => dm.id === a.id));
+        list = [...districtMatches, ...otherStateMatches];
+      } else if (stateMatches.length > 0) {
+        list = stateMatches;
+      }
+    } else if (selectedState) {
+      const stateMatches = list.filter(a => 
+        a.stateId === selectedState.id || 
+        (a.stateName && a.stateName.toLowerCase().includes(selectedState.name.toLowerCase()))
+      );
+      if (stateMatches.length > 0) {
+        list = stateMatches;
+      }
+    }
+
+    // 2. Category filter
     if (activeCategory === 'For You') {
-      // Personalized feed prioritizing followed states or safety / tech
-      filtered = filtered.filter(a => 
+      list = list.filter(a => 
         a.category === 'Public Safety & Crime' || 
         a.category === 'Tech' || 
         a.stateId === selectedState?.id ||
         a.isBreaking
       );
     } else if (activeCategory !== 'All') {
-      filtered = filtered.filter(a => a.category === activeCategory);
+      list = list.filter(a => a.category === activeCategory);
     }
 
-    // State & District filter
-    if (selectedState) {
-      filtered = filtered.filter(a => !a.stateId || a.stateId === selectedState.id);
-    }
-
-    if (selectedDistrict) {
-      const match = filtered.filter(a => a.districtId === selectedDistrict.id);
-      if (match.length > 0) filtered = match;
-    }
-
-    // Crime category filter
+    // 3. Crime category filter
     if (selectedCrimeCategory) {
-      filtered = filtered.filter(a => a.crimeCategory === selectedCrimeCategory);
+      list = list.filter(a => a.crimeCategory === selectedCrimeCategory);
     }
 
-    // Source Tier filter
+    // 4. Source Tier filter
     if (selectedTierFilter !== 'All') {
-      filtered = filtered.filter(a => {
+      list = list.filter(a => {
         const srcInfo = getSourceByName(a.source);
         return a.sourceTier === selectedTierFilter || srcInfo?.tier === selectedTierFilter;
       });
     }
 
-    // Specific Source filter
+    // 5. Specific Source filter
     if (selectedSourceFilter !== 'All') {
-      filtered = filtered.filter(a => {
+      list = list.filter(a => {
         const sLower = a.source.toLowerCase();
         const fLower = selectedSourceFilter.toLowerCase();
         return sLower.includes(fLower) || fLower.includes(sLower);
       });
     }
 
-    // Search query filter
+    // 6. Search query filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(a => 
+      list = list.filter(a => 
         a.title.toLowerCase().includes(q) ||
         a.snippet.toLowerCase().includes(q) ||
         a.content.toLowerCase().includes(q) ||
@@ -158,11 +158,76 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
         (a.stateName && a.stateName.toLowerCase().includes(q))
       );
     }
-  }
 
-  // Breaking article highlight if available
-  const breakingArticle = !isBookmarksView && !searchQuery && selectedSourceFilter === 'All' && selectedTierFilter === 'All' ? filtered.find(a => a.isBreaking) : null;
-  const standardArticles = breakingArticle ? filtered.filter(a => a.id !== breakingArticle.id) : filtered;
+    return list;
+  }, [
+    timeframeArticles, 
+    isBookmarksView, 
+    bookmarkedIds, 
+    selectedDistrict, 
+    selectedState, 
+    activeCategory, 
+    selectedCrimeCategory, 
+    selectedTierFilter, 
+    selectedSourceFilter, 
+    searchQuery
+  ]);
+
+  // Multi-slide breaking news pool
+  const breakingPool = useMemo(() => {
+    if (isBookmarksView || searchQuery || selectedSourceFilter !== 'All' || selectedTierFilter !== 'All') {
+      return [];
+    }
+
+    // 1. Direct breaking articles within current filtered set
+    const directBreaking = filtered.filter(a => a.isBreaking);
+    if (directBreaking.length > 0) {
+      return directBreaking.slice(0, 6);
+    }
+
+    // 2. If filtered has articles (e.g. for a state), pick top 3 stories as lead slides
+    if (filtered.length > 0 && (selectedState || selectedDistrict)) {
+      return filtered.slice(0, 3);
+    }
+
+    // 3. Fallback: all breaking articles across current timeframe
+    const allBreaking = timeframeArticles.filter(a => a.isBreaking);
+    return allBreaking.length > 0 ? allBreaking.slice(0, 6) : (filtered.length > 0 ? [filtered[0]] : []);
+  }, [filtered, timeframeArticles, isBookmarksView, searchQuery, selectedSourceFilter, selectedTierFilter, selectedState, selectedDistrict]);
+
+  // Reset slide index when location or category changes
+  useEffect(() => {
+    setBreakingSlideIndex(0);
+  }, [selectedState?.id, selectedDistrict?.id, activeCategory, articles.length]);
+
+  // Auto-cycle breaking news banner every 5.5 seconds (pauses on hover)
+  useEffect(() => {
+    if (breakingPool.length <= 1 || isHeroHovered) return;
+
+    const timer = setInterval(() => {
+      setBreakingSlideIndex(prev => (prev + 1) % breakingPool.length);
+    }, 5500);
+
+    return () => clearInterval(timer);
+  }, [breakingPool.length, isHeroHovered]);
+
+  const activeBreakingArticle = breakingPool[breakingSlideIndex] || breakingPool[0] || null;
+  const standardArticles = activeBreakingArticle 
+    ? filtered.filter(a => a.id !== activeBreakingArticle.id) 
+    : filtered;
+
+  // Category counts calculation helper based on current timeframe
+  const getCategoryCount = (catId: NewsCategory) => {
+    if (catId === 'All') return filtered.length;
+    if (catId === 'For You') {
+      return filtered.filter(a => 
+        a.category === 'Public Safety & Crime' || 
+        a.category === 'Tech' || 
+        a.isBreaking
+      ).length;
+    }
+    return filtered.filter(a => a.category === catId).length;
+  };
   const timeLabel = getTimeframeLabel(timeKey, customStartDate, customEndDate);
 
   const handleClearAll = () => {
@@ -385,64 +450,123 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
         </div>
       )}
 
-      {/* Breaking / Lead Story Hero Banner if present */}
-      {breakingArticle && (
-        <div className="mb-6">
+      {/* Multi-Slide Breaking / Lead Story Hero Carousel */}
+      {activeBreakingArticle && (
+        <div 
+          className="mb-6"
+          onMouseEnter={() => setIsHeroHovered(true)}
+          onMouseLeave={() => setIsHeroHovered(false)}
+        >
           <div className="relative rounded-3xl overflow-hidden bg-slate-900 text-white p-6 sm:p-8 shadow-xl border border-slate-800 group cursor-pointer"
-            onClick={() => onSelectArticle(breakingArticle)}
+            onClick={() => onSelectArticle(activeBreakingArticle)}
           >
-            <div className="absolute top-4 left-4 z-10">
-              <span className="px-3 py-1 rounded-full bg-rose-600 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md">
-                <Flame className="w-3.5 h-3.5 animate-bounce" />
-                Breaking News
-              </span>
+            {/* Top Bar with Breaking Tag & Multi-Slide Carousel Controls */}
+            <div className="flex items-center justify-between gap-3 relative z-10 flex-wrap mb-2">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-rose-600 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md">
+                  <Flame className="w-3.5 h-3.5 animate-bounce" />
+                  {activeBreakingArticle.isBreaking ? 'Breaking News' : 'Top Lead Story'}
+                </span>
+
+                {breakingPool.length > 1 && (
+                  <span className="text-[11px] font-bold text-slate-400 bg-slate-800/80 px-2.5 py-0.5 rounded-full border border-slate-700">
+                    Slide {breakingSlideIndex + 1} of {breakingPool.length}
+                  </span>
+                )}
+              </div>
+
+              {/* Multi-slide Navigation Controls */}
+              {breakingPool.length > 1 && (
+                <div className="flex items-center gap-2 bg-slate-800/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-700">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setBreakingSlideIndex(prev => (prev - 1 + breakingPool.length) % breakingPool.length);
+                    }}
+                    className="w-6 h-6 rounded-full bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                    title="Previous breaking news slide"
+                  >
+                    ‹
+                  </button>
+
+                  <div className="flex items-center gap-1.5">
+                    {breakingPool.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setBreakingSlideIndex(i);
+                        }}
+                        className={`h-2 rounded-full transition-all cursor-pointer ${
+                          breakingSlideIndex === i ? 'bg-rose-500 w-5' : 'bg-slate-600 hover:bg-slate-400 w-2'
+                        }`}
+                        title={`Slide ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setBreakingSlideIndex(prev => (prev + 1) % breakingPool.length);
+                    }}
+                    className="w-6 h-6 rounded-full bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
+                    title="Next breaking news slide"
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10 mt-6 sm:mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10 mt-4 animate-in fade-in duration-300">
               <div className="lg:col-span-8">
-                <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-                  <span className="font-bold text-white">{breakingArticle.source}</span>
+                <div className="flex items-center gap-2 text-xs text-slate-400 mb-2 flex-wrap">
+                  <span className="font-bold text-white">{activeBreakingArticle.source}</span>
                   <span>•</span>
-                  <span>{breakingArticle.publishedAt}</span>
-                  {breakingArticle.stateName && (
+                  <span>{activeBreakingArticle.publishedAt}</span>
+                  {activeBreakingArticle.stateName && (
                     <>
                       <span>•</span>
-                      <span className="text-blue-400 font-semibold">📍 {breakingArticle.stateName}</span>
+                      <span className="text-blue-400 font-semibold">📍 {activeBreakingArticle.stateName}</span>
                     </>
+                  )}
+                  {activeBreakingArticle.districtName && (
+                    <span className="text-emerald-400 font-semibold">({activeBreakingArticle.districtName})</span>
                   )}
                 </div>
 
                 <h3 className="text-xl sm:text-3xl font-black text-white group-hover:text-blue-400 transition-colors leading-tight tracking-tight">
-                  {(breakingArticle.translatedTitles && breakingArticle.translatedTitles[currentLanguage]) || breakingArticle.title}
+                  {(activeBreakingArticle.translatedTitles && activeBreakingArticle.translatedTitles[currentLanguage]) || activeBreakingArticle.title}
                 </h3>
 
                 <p className="text-sm text-slate-300 mt-3 line-clamp-3 leading-relaxed">
-                  {breakingArticle.snippet}
+                  {activeBreakingArticle.snippet}
                 </p>
 
                 <div className="flex items-center flex-wrap gap-2 mt-4">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onQuickAiSummary(breakingArticle);
+                      onQuickAiSummary(activeBreakingArticle);
                     }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-xs"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                     <span>AI 3-Point Summary</span>
                   </button>
 
                   <span className="text-xs text-slate-400">
-                    ⏱️ {breakingArticle.readTimeMinutes} min read
+                    ⏱️ {activeBreakingArticle.readTimeMinutes} min read
                   </span>
                 </div>
               </div>
 
-              {breakingArticle.imageUrl && (
+              {activeBreakingArticle.imageUrl && (
                 <div className="lg:col-span-4 rounded-2xl overflow-hidden h-48 sm:h-56 bg-slate-800 border border-slate-700">
                   <img
-                    src={breakingArticle.imageUrl}
-                    alt={breakingArticle.title}
+                    src={activeBreakingArticle.imageUrl}
+                    alt={activeBreakingArticle.title}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
