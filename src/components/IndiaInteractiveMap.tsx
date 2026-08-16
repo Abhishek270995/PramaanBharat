@@ -23,13 +23,17 @@ import {
   ArrowLeft,
   ChevronDown
 } from 'lucide-react';
-import { StateInfo, DistrictInfo, RiskLevel } from '../types';
+import { StateInfo, DistrictInfo, RiskLevel, TimeRangeKey } from '../types';
 import { requestBrowserLocation } from '../utils/geolocationUtils';
+import { getTimeframeMetricsConfig } from '../data/crimeData';
 
 interface IndiaInteractiveMapProps {
   statesList: StateInfo[];
   selectedState: StateInfo | null;
   selectedDistrict: DistrictInfo | null;
+  timeKey: TimeRangeKey;
+  customStartDate?: string;
+  customEndDate?: string;
   onSelectState: (state: StateInfo | null) => void;
   onSelectDistrict: (district: DistrictInfo | null) => void;
   onOpenAISafetyBriefing: () => void;
@@ -41,6 +45,9 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
   statesList,
   selectedState,
   selectedDistrict,
+  timeKey,
+  customStartDate,
+  customEndDate,
   onSelectState,
   onSelectDistrict,
   onOpenAISafetyBriefing
@@ -55,6 +62,11 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [riskFilter, setRiskFilter] = useState<'all' | 'High' | 'Moderate' | 'Low'>('all');
   const [showStateDropdown, setShowStateDropdown] = useState<boolean>(false);
+
+  // Timeframe configuration based on user's selected date range filter
+  const timeframeConfig = useMemo(() => {
+    return getTimeframeMetricsConfig(timeKey, customStartDate, customEndDate);
+  }, [timeKey, customStartDate, customEndDate]);
 
   // Official ISRO Bhuvan & Certified GIS Tile Layers
   const TILE_URLS: Record<MapTileStyle, { url: string; attribution: string; subdomains?: string }> = {
@@ -119,7 +131,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
     tileLayerRef.current.setUrl(tileConfig.url);
   }, [mapStyle]);
 
-  // Update Markers based on Selected State & Districts
+  // Update Markers based on Selected State & Districts & Timeframe
   useEffect(() => {
     if (!mapInstanceRef.current || !markersLayerRef.current) return;
     const markersLayer = markersLayerRef.current;
@@ -134,16 +146,18 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
     };
 
     if (selectedState) {
-      // 1. Zoom into State and render all its District Markers
+      // 1. Zoom into State and render all its District Markers with timeframe scaled numbers
       const districts = selectedState.districts || [];
 
-      // Render district pins for selected state
       if (districts.length > 0) {
         districts.forEach(dist => {
           if (!dist.coordinates || dist.coordinates.length !== 2) return;
           const [lat, lon] = dist.coordinates;
           const isSelected = selectedDistrict?.id === dist.id;
           const color = getPinColor(dist.riskLevel);
+
+          const distReported = Math.max(1, Math.round(dist.reportedCrimes * timeframeConfig.multiplier));
+          const distSolved = Math.max(1, Math.round(distReported * timeframeConfig.solveRatio));
 
           const customIcon = L.divIcon({
             className: 'custom-district-pin',
@@ -182,13 +196,14 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
           const marker = L.marker([lat, lon], { icon: customIcon }).addTo(markersLayer);
 
           const popupContent = `
-            <div style="font-family: inherit; padding: 4px; min-width: 180px;">
+            <div style="font-family: inherit; padding: 4px; min-width: 190px;">
               <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 6px;">
                 <b style="font-size: 13px; color: #0f172a;">${dist.name}</b>
                 <span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 12px; background: ${color}20; color: ${color};">${dist.riskLevel} Risk</span>
               </div>
               <div style="font-size: 11px; color: #475569; line-height: 1.5; margin-bottom: 8px;">
-                <div><b>Reported:</b> ${dist.reportedCrimes} | <b>Solved:</b> ${dist.solvedCrimes}</div>
+                <div style="font-size: 10px; color: #2563eb; font-weight: 700; margin-bottom: 2px;">📅 ${timeframeConfig.periodName}</div>
+                <div><b>Reported:</b> ${distReported.toLocaleString('en-IN')} | <b>Solved:</b> ${distSolved.toLocaleString('en-IN')}</div>
                 <div><b>Police Stations:</b> ${dist.policeStationsCount}</div>
                 <div style="color: #2563eb; font-weight: 600; margin-top: 3px;">📞 ${dist.emergencyHelpline}</div>
               </div>
@@ -202,7 +217,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
         });
       }
 
-      // Also render subtle clickable pins for all OTHER states so user can jump across states directly on the map
+      // Render subtle clickable pins for all OTHER states so user can jump across states directly on the map
       statesList.filter(s => s.id !== selectedState.id).forEach(otherState => {
         if (!otherState.centerCoordinates || otherState.centerCoordinates.length !== 2) return;
         const [oLat, oLon] = otherState.centerCoordinates;
@@ -242,6 +257,8 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
         if (!st.centerCoordinates || st.centerCoordinates.length !== 2) return;
         const [lat, lon] = st.centerCoordinates;
         const color = getPinColor(st.riskLevel);
+        const stReported = Math.max(1, Math.round(st.reportedCrimes * timeframeConfig.multiplier));
+        const stSolved = Math.max(1, Math.round(stReported * timeframeConfig.solveRatio));
 
         const customIcon = L.divIcon({
           className: 'custom-state-pin',
@@ -278,6 +295,21 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
 
         const marker = L.marker([lat, lon], { icon: customIcon }).addTo(markersLayer);
 
+        const popupContent = `
+          <div style="font-family: inherit; padding: 4px; min-width: 190px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 6px;">
+              <b style="font-size: 13px; color: #0f172a;">${st.name}</b>
+              <span style="font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 12px; background: ${color}20; color: ${color};">${st.riskLevel} Risk</span>
+            </div>
+            <div style="font-size: 11px; color: #475569; line-height: 1.5;">
+              <div style="font-size: 10px; color: #2563eb; font-weight: 700; margin-bottom: 2px;">📅 ${timeframeConfig.periodName}</div>
+              <div><b>Reported:</b> ${stReported.toLocaleString('en-IN')} | <b>Solved:</b> ${stSolved.toLocaleString('en-IN')}</div>
+              <div><b>Districts:</b> ${st.districts?.length || 0}</div>
+            </div>
+          </div>
+        `;
+        marker.bindPopup(popupContent);
+
         marker.on('click', () => {
           onSelectState(st);
           if (st.districts && st.districts.length > 0) {
@@ -288,7 +320,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
 
       mapInstanceRef.current.flyTo([22.5937, 78.9629], 5, { duration: 1.0 });
     }
-  }, [selectedState, selectedDistrict, statesList]);
+  }, [selectedState, selectedDistrict, statesList, timeframeConfig]);
 
   const handleLocateMe = async () => {
     setIsLocating(true);
@@ -346,6 +378,10 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold tracking-wider uppercase border border-blue-200">
               Live Google-Calibrated GIS Map
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-bold border border-indigo-200 flex items-center gap-1">
+              <span>📅 Filter:</span>
+              <span>{timeframeConfig.periodName}</span>
             </span>
             <span className="text-slate-400 text-xs hidden sm:inline">• Real street, satellite &amp; district boundaries</span>
           </div>
@@ -635,16 +671,22 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
                 </div>
 
                 {/* State Crime & Police HQ Snapshot */}
-                <div className="grid grid-cols-2 gap-2 my-3 text-xs">
-                  <div className="p-2.5 rounded-2xl bg-white border border-slate-200 shadow-2xs">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold">Reported Crimes</span>
-                    <p className="text-sm font-black text-slate-900 mt-0.5">{selectedState.reportedCrimes.toLocaleString('en-IN')}</p>
-                  </div>
-                  <div className="p-2.5 rounded-2xl bg-white border border-slate-200 shadow-2xs">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold">Solved Cases</span>
-                    <p className="text-sm font-black text-emerald-600 mt-0.5">{selectedState.solvedCrimes.toLocaleString('en-IN')}</p>
-                  </div>
-                </div>
+                {(() => {
+                  const stateReported = Math.max(1, Math.round(selectedState.reportedCrimes * timeframeConfig.multiplier));
+                  const stateSolved = Math.max(1, Math.round(stateReported * timeframeConfig.solveRatio));
+                  return (
+                    <div className="grid grid-cols-2 gap-2 my-3 text-xs">
+                      <div className="p-2.5 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Reported ({timeframeConfig.periodName})</span>
+                        <p className="text-sm font-black text-slate-900 mt-0.5">{stateReported.toLocaleString('en-IN')}</p>
+                      </div>
+                      <div className="p-2.5 rounded-2xl bg-white border border-slate-200 shadow-2xs">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Solved Cases</span>
+                        <p className="text-sm font-black text-emerald-600 mt-0.5">{stateSolved.toLocaleString('en-IN')}</p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Police HQ */}
                 <div className="p-2.5 rounded-2xl bg-white border border-slate-200 text-xs text-slate-700 flex items-start gap-2 mb-3">
@@ -679,6 +721,9 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
                 <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
                   {activeDistricts.map((dist) => {
                     const isDistSelected = selectedDistrict?.id === dist.id;
+                    const distReported = Math.max(1, Math.round(dist.reportedCrimes * timeframeConfig.multiplier));
+                    const distSolved = Math.max(1, Math.round(distReported * timeframeConfig.solveRatio));
+
                     return (
                       <div
                         key={dist.id}
@@ -715,11 +760,11 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
                         <div className="grid grid-cols-3 gap-2 mt-1.5 pt-1.5 border-t border-slate-100/30 text-[10px]">
                           <div>
                             <span className={isDistSelected ? 'text-blue-100' : 'text-slate-400'}>Reported:</span>
-                            <span className="font-bold ml-1">{dist.reportedCrimes}</span>
+                            <span className="font-bold ml-1">{distReported.toLocaleString('en-IN')}</span>
                           </div>
                           <div>
                             <span className={isDistSelected ? 'text-blue-100' : 'text-slate-400'}>Solved:</span>
-                            <span className="font-bold ml-1">{dist.solvedCrimes}</span>
+                            <span className="font-bold ml-1">{distSolved.toLocaleString('en-IN')}</span>
                           </div>
                           <div>
                             <span className={isDistSelected ? 'text-blue-100' : 'text-slate-400'}>Stations:</span>

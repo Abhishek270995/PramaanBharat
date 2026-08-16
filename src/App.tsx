@@ -416,11 +416,14 @@ export default function App() {
               onOpenPolicePortal={() => setIsPolicePortalOpen(true)}
             />
 
-            {/* 2. Interactive SVG Map of India with State & District Drilldown */}
+            {/* 2. Interactive GIS Map of India with State & District Drilldown */}
             <IndiaInteractiveMap
               statesList={INDIA_STATES_DATA}
               selectedState={selectedState}
               selectedDistrict={selectedDistrict}
+              timeKey={timeKey}
+              customStartDate={customStartDate}
+              customEndDate={customEndDate}
               onSelectState={setSelectedState}
               onSelectDistrict={setSelectedDistrict}
               onOpenAISafetyBriefing={() => setIsAISafetyAdvisorOpen(true)}
