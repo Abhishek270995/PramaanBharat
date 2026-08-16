@@ -50,3 +50,19 @@
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* Completely remove Leaflet watermark & attribution controls */
+.leaflet-control-attribution {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+.leaflet-pane {
+  z-index: 10 !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 15 !important;
+}

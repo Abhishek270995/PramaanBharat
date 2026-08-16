@@ -87,7 +87,8 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
       minZoom: 4,
       maxZoom: 18,
       zoomControl: true,
-      scrollWheelZoom: true
+      scrollWheelZoom: true,
+      attributionControl: false
     });
 
     const tileConfig = TILE_URLS[mapStyle];
