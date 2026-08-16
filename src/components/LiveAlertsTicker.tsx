@@ -37,17 +37,34 @@ export const LiveAlertsTicker: React.FC<LiveAlertsTickerProps> = ({
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
   const [isHovered, setIsHovered] = useState<boolean>(false);
 
-  // Filter alerts with priority for user's selected district, then selected state, then general
-  const filteredAlerts = useMemo(() => {
+  // Construct comprehensive ordered alerts pool: selected district first, then state, then national advisories
+  const activeAlertsPool = useMemo(() => {
+    const pool: LiveSafetyAlert[] = [];
+    const seenIds = new Set<string>();
+
+    // 1. Direct district alerts
     if (selectedDistrict) {
-      const districtAlerts = alerts.filter(a => a.districtId === selectedDistrict.id);
-      if (districtAlerts.length > 0) return districtAlerts;
+      alerts.filter(a => a.districtId === selectedDistrict.id).forEach(a => {
+        if (!seenIds.has(a.id)) { pool.push(a); seenIds.add(a.id); }
+      });
     }
+
+    // 2. State-level alerts
     if (selectedState) {
-      const stateAlerts = alerts.filter(a => a.stateId === selectedState.id);
-      if (stateAlerts.length > 0) return stateAlerts;
+      alerts.filter(a => a.stateId === selectedState.id).forEach(a => {
+        if (!seenIds.has(a.id)) { pool.push(a); seenIds.add(a.id); }
+      });
     }
-    return alerts;
+
+    // 3. National and all-India critical advisories
+    alerts.forEach(a => {
+      if (!seenIds.has(a.id)) {
+        pool.push(a);
+        seenIds.add(a.id);
+      }
+    });
+
+    return pool.length > 0 ? pool : alerts;
   }, [alerts, selectedState, selectedDistrict]);
 
   // Reset index when location changes
@@ -57,9 +74,20 @@ export const LiveAlertsTicker: React.FC<LiveAlertsTickerProps> = ({
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
     }
-  }, [selectedState, selectedDistrict]);
+  }, [selectedState?.id, selectedDistrict?.id]);
 
-  const currentAlert = filteredAlerts[activeAlertIndex] || filteredAlerts[0] || alerts[0];
+  // Automatic live moving ticker (rotates every 4.5 seconds, pauses when user hovers or listens)
+  useEffect(() => {
+    if (activeAlertsPool.length <= 1 || isHovered || isSpeaking) return;
+
+    const timer = setInterval(() => {
+      setActiveAlertIndex((prev) => (prev + 1) % activeAlertsPool.length);
+    }, 4500);
+
+    return () => clearInterval(timer);
+  }, [activeAlertsPool.length, isHovered, isSpeaking]);
+
+  const currentAlert = activeAlertsPool[activeAlertIndex] || activeAlertsPool[0] || alerts[0];
 
   const handleSpeakAlert = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -202,22 +230,49 @@ export const LiveAlertsTicker: React.FC<LiveAlertsTickerProps> = ({
                 <span>{currentAlert.activeHelpline.split('/')[0]}</span>
               </button>
 
-              {/* Navigation Dots for multiple alerts */}
-              {filteredAlerts.length > 1 && (
+              {/* Navigation Controls for live moving alerts */}
+              {activeAlertsPool.length > 1 && (
                 <div className="flex items-center gap-1 pl-1">
-                  {filteredAlerts.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveAlertIndex(i);
-                      }}
-                      className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
-                        activeAlertIndex === i ? 'bg-blue-400 w-4' : 'bg-slate-600 hover:bg-slate-400'
-                      }`}
-                      title={`Alert ${i + 1}`}
-                    />
-                  ))}
+                  {/* Previous Alert */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveAlertIndex((prev) => (prev - 1 + activeAlertsPool.length) % activeAlertsPool.length);
+                    }}
+                    className="text-slate-400 hover:text-white p-0.5 rounded hover:bg-slate-700 transition-colors cursor-pointer"
+                    title="Previous advisory"
+                  >
+                    ‹
+                  </button>
+
+                  {/* Dots indicator */}
+                  <div className="flex items-center gap-1">
+                    {activeAlertsPool.slice(0, 6).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveAlertIndex(i);
+                        }}
+                        className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                          activeAlertIndex === i ? 'bg-blue-400 w-3.5' : 'bg-slate-600 hover:bg-slate-400 w-1.5'
+                        }`}
+                        title={`Advisory ${i + 1} of ${activeAlertsPool.length}`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Next Alert */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveAlertIndex((prev) => (prev + 1) % activeAlertsPool.length);
+                    }}
+                    className="text-slate-400 hover:text-white p-0.5 rounded hover:bg-slate-700 transition-colors cursor-pointer"
+                    title="Next advisory"
+                  >
+                    ›
+                  </button>
                 </div>
               )}
 
