@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { MapPin, Navigation, Sparkles, X, CheckCircle2, ShieldCheck } from 'lucide-react';
-import { StateInfo, DistrictInfo } from '../types';
+import { MapPin, Navigation, Sparkles, X } from 'lucide-react';
+import { StateInfo } from '../types';
 import { requestBrowserLocation, LocationDetectionResult } from '../utils/geolocationUtils';
 
 interface LocationPromptModalProps {
@@ -17,7 +17,8 @@ export const LocationPromptModal: React.FC<LocationPromptModalProps> = ({
   onLocationDetected
 }) => {
   const [isDetecting, setIsDetecting] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  if (!isOpen) return null;
 
   const handleDismiss = () => {
     try {
@@ -28,29 +29,36 @@ export const LocationPromptModal: React.FC<LocationPromptModalProps> = ({
     onClose();
   };
 
-  const handleAllowLocation = async () => {
+  const handleAllowLocation = () => {
     setIsDetecting(true);
-    setErrorMessage(null);
     try {
       localStorage.setItem('pramaan_location_prompt_seen', 'true');
-      const result = await requestBrowserLocation(statesList);
-      setIsDetecting(false);
-      onLocationDetected(result);
-      onClose();
     } catch {
-      setIsDetecting(false);
-      onClose();
+      // ignore
     }
+    
+    // Instantly close the modal popup so it never hangs or lingers on screen
+    onClose();
+
+    // Trigger fast background detection and notify App.tsx
+    requestBrowserLocation(statesList)
+      .then((result) => {
+        setIsDetecting(false);
+        onLocationDetected(result);
+      })
+      .catch(() => {
+        setIsDetecting(false);
+      });
   };
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5">
+    <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-200">
       <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-white rounded-2xl p-4 sm:p-5 shadow-2xl border border-blue-500/30 ring-4 ring-blue-500/10">
         
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/30 flex items-center justify-center shrink-0">
-              <Navigation className={`w-4 h-4 text-blue-400 ${isDetecting ? 'animate-spin' : 'animate-pulse'}`} />
+              <Navigation className="w-4 h-4 text-blue-400 animate-pulse" />
             </div>
             <div>
               <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
@@ -67,28 +75,21 @@ export const LocationPromptModal: React.FC<LocationPromptModalProps> = ({
 
           <button
             onClick={handleDismiss}
-            className="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-slate-800 transition-colors shrink-0"
+            className="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-slate-800 transition-colors shrink-0 cursor-pointer"
             title="Dismiss"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {errorMessage && (
-          <div className="mt-2.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-300">
-            {errorMessage}
-          </div>
-        )}
-
         <div className="mt-3.5 flex items-center gap-2 pt-3 border-t border-slate-800">
           <button
             id="enable-auto-location-btn"
             onClick={handleAllowLocation}
-            disabled={isDetecting}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-50"
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
           >
             <MapPin className="w-3.5 h-3.5" />
-            <span>{isDetecting ? 'Detecting Region...' : 'Enable Auto-Location'}</span>
+            <span>Enable Auto-Location</span>
           </button>
 
           <button
