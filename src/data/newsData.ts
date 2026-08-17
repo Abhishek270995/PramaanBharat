@@ -21,6 +21,8 @@ The three-judge bench observed that real-time telematics linked directly with St
 
 Under the new guidelines, every vehicle must carry an active dual-SIM emergency button linked directly to the nearest Police Control Room. State authorities have been given four months to establish API integration with the National Emergency Response Support System (ERSS-112).`,
     source: 'The Indian Express',
+    originalUrl: 'https://indianexpress.com/article/india/supreme-court-mandates-unified-112-sos-gps-mesh/',
+    sourceTier: 'National Broadsheet',
     publishedAt: '25 mins ago',
     category: 'Public Safety & Crime',
     crimeCategory: 'Women & Child Safety',
@@ -61,6 +63,8 @@ The operation, codenamed 'Chakra-IV', targeted call centers operating out of Cam
 
 "Using our automated 1930 Citizen Financial Cyber Fraud Reporting System, fraud funds are now frozen within 15 minutes of citizen reporting, preventing swift offshore crypto conversions," said the Chief Executive Officer of I4C during a special briefing.`,
     source: 'Press Trust of India (PTI)',
+    originalUrl: 'https://www.ptinews.com/national/i4c-freezes-crores-cyber-fraud/',
+    sourceTier: 'Official Statutory & Wire',
     publishedAt: '42 mins ago',
     category: 'Public Safety & Crime',
     crimeCategory: 'Cybercrime & Online Fraud',
@@ -68,7 +72,7 @@ The operation, codenamed 'Chakra-IV', targeted call centers operating out of Cam
     stateName: 'Delhi NCR',
     imageUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 5,
-    isBreaking: false,
+    isBreaking: true,
     isVerifiedFactCheck: true,
     credibilityRating: 'Verified Wire (PTI/ANI)',
     tags: ['I4C', 'Cyber Crime', '1930 Helpline', 'Mule Accounts', 'Digital Arrest'],
@@ -99,6 +103,8 @@ The gang utilized imported Electronic Control Unit (ECU) reprogrammers and frequ
 
 Commissioner of Police confirmed that 34 vehicles have been seized and returned to rightful owners, while 9 core operatives and 3 corrupt middlemen have been remanded under MCOCA.`,
     source: 'The Times of India',
+    originalUrl: 'https://timesofindia.indiatimes.com/city/mumbai/crime-branch-busts-car-theft-syndicate/articleshow',
+    sourceTier: 'National Broadsheet',
     publishedAt: '2 hours ago',
     category: 'Public Safety & Crime',
     crimeCategory: 'Theft & Burglary',
@@ -108,7 +114,7 @@ Commissioner of Police confirmed that 34 vehicles have been seized and returned 
     districtName: 'Mumbai Suburban & Bandra',
     imageUrl: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 4,
-    isBreaking: false,
+    isBreaking: true,
     isVerifiedFactCheck: true,
     credibilityRating: 'Correspondent Ground Report',
     tags: ['Mumbai Police', 'Car Theft', 'Crime Branch', 'Forensic Tech', 'Recovery'],
@@ -139,6 +145,8 @@ Over 12,000 citizens across Telangana, Andhra Pradesh, and Karnataka fell victim
 
 "With swift coordination through Interpol Red Notices, four key orchestrators were detained in Dubai and extradited to Hyderabad to face trial under the BNS and Prevention of Money Laundering Act," stated the Cyberabad Police Commissioner.`,
     source: 'Deccan Chronicle',
+    originalUrl: 'https://www.deccanchronicle.com/nation/crime/cyberabad-police-busts-forex-scam',
+    sourceTier: 'National Broadsheet',
     publishedAt: '4 hours ago',
     category: 'Public Safety & Crime',
     crimeCategory: 'Financial & Corporate Fraud',
@@ -148,7 +156,7 @@ Over 12,000 citizens across Telangana, Andhra Pradesh, and Karnataka fell victim
     districtName: 'Hyderabad Urban & Cyberabad',
     imageUrl: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 4,
-    isBreaking: false,
+    isBreaking: true,
     isVerifiedFactCheck: true,
     credibilityRating: 'Official Press Brief',
     tags: ['Forex Scam', 'Cyberabad Police', 'Financial Fraud', 'Interpol', 'Asset Recovery'],
@@ -179,6 +187,8 @@ Forensic X-ray scanners detected false cavities containing 180 kg of high-purity
 
 Five foreign nationals and four domestic logistics handlers were taken into custodial interrogation under the NDPS Act.`,
     source: 'The Telegraph India',
+    originalUrl: 'https://www.telegraphindia.com/west-bengal/calcutta/ncb-seizes-contraband-at-kolkata-port',
+    sourceTier: 'National Broadsheet',
     publishedAt: '5 hours ago',
     category: 'Public Safety & Crime',
     crimeCategory: 'Narcotics & NDPS',
@@ -188,7 +198,7 @@ Five foreign nationals and four domestic logistics handlers were taken into cust
     districtName: 'Kolkata Metro & Port Area',
     imageUrl: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 3,
-    isBreaking: false,
+    isBreaking: true,
     isVerifiedFactCheck: true,
     credibilityRating: 'Verified Wire (PTI/ANI)',
     tags: ['NCB', 'Kolkata Port', 'NDPS', 'Coast Guard', 'Drug Interdiction'],
@@ -221,13 +231,15 @@ The indigenous SIL-4 certified system utilizes direct locomotive-to-locomotive U
 
 Safety audits conducted over 4.5 million train kilometers reported 100% operational fidelity in dense fog and heavy rain scenarios.`,
     source: 'Press Trust of India (PTI)',
+    originalUrl: 'https://www.ptinews.com/national/railways-deploys-kavach-4-0',
+    sourceTier: 'Official Statutory & Wire',
     publishedAt: '8 hours ago',
     category: 'National',
     stateId: 'delhi-ncr',
     stateName: 'Delhi NCR',
     imageUrl: 'https://images.unsplash.com/photo-1509749837427-ac94a2553d0e?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 4,
-    isBreaking: false,
+    isBreaking: true,
     isVerifiedFactCheck: true,
     credibilityRating: 'Official Press Brief',
     tags: ['Indian Railways', 'Kavach', 'Vande Bharat', 'Railway Safety', 'Indigenous Tech'],
@@ -258,6 +270,8 @@ The satellite carries an indigenous Rubidium atomic clock developed by the Space
 
 The launch enhances coverage for commercial aviation, maritime fishing safety beacons, smartphone geolocation, and national disaster management response teams across the Indian subcontinent and 1,500 km beyond its borders.`,
     source: 'The Hindu',
+    originalUrl: 'https://www.isro.gov.in/NVS-02_Mission.html',
+    sourceTier: 'Official Statutory & Wire',
     publishedAt: '7 hours ago',
     category: 'National',
     stateId: 'andhra-pradesh',
@@ -295,6 +309,7 @@ The expressway is the first in Asia to incorporate specialized animal overpasses
 
 In addition, over 50 MW of solar power capacity has been installed on highway sound barriers, powering 100% of LED streetlights, automated ANPR toll gantries, and EV ultra-fast charging stations along the route.`,
     source: 'The Economic Times',
+    originalUrl: 'https://economictimes.indiatimes.com',
     publishedAt: '9 hours ago',
     category: 'National',
     stateId: 'delhi-ncr',
@@ -332,6 +347,7 @@ Tracking telemetry stations along the eastern seaboard and naval vessels in the 
 
 The successful demonstration places India among an elite group of nations possessing operational hypersonic atmospheric glide technology for strategic deterrence.`,
     source: 'Press Trust of India (PTI)',
+    originalUrl: 'https://ptinews.com',
     publishedAt: '12 hours ago',
     category: 'National',
     stateId: 'odisha',
@@ -371,6 +387,7 @@ The Union Law Ministry confirmed that over 17,000 police stations across India h
 
 The legislation aims to eliminate procedural tampering, accelerate trial timelines, and safeguard citizens against unauthorized police detentions.`,
     source: 'The Hindu',
+    originalUrl: 'https://www.thehindu.com',
     publishedAt: '9 hours ago',
     category: 'Politics',
     stateId: 'delhi-ncr',
@@ -410,6 +427,7 @@ Under Form 12D procedures, designated polling officers along with videographers 
 
 The measure saw historic 94% turnout among registered octogenarians during state election pilots in Rajasthan and Telangana.`,
     source: 'Hindustan Times',
+    originalUrl: 'https://www.hindustantimes.com',
     publishedAt: '11 hours ago',
     category: 'Politics',
     stateId: 'delhi-ncr',
@@ -447,6 +465,7 @@ The initiative integrates automated acoustic flow sensors and IMD radar rainfall
 
 The council also approved a tariff waiver for green hydrogen transportation across state transmission lines.`,
     source: 'The Hindu',
+    originalUrl: 'https://www.thehindu.com',
     publishedAt: '14 hours ago',
     category: 'Politics',
     stateId: 'delhi-ncr',
@@ -486,6 +505,7 @@ RBI Governor emphasized that India's macroeconomic fundamentals remain resilient
 
 Major sovereign wealth funds and institutional investors expanded equity positions in Indian green grid infrastructure and solar equipment manufacturing parks across Rajasthan and Gujarat.`,
     source: 'The Economic Times',
+    originalUrl: 'https://economictimes.indiatimes.com',
     publishedAt: '10 hours ago',
     category: 'Business',
     stateId: 'maharashtra',
@@ -564,6 +584,7 @@ The ₹91,000 crore facility, established under the India Semiconductor Mission 
 
 The manufactured chips will serve automotive electric vehicle controllers, smart electricity meters, defense avionics, and consumer IoT appliances.`,
     source: 'The Economic Times',
+    originalUrl: 'https://economictimes.indiatimes.com',
     publishedAt: '14 hours ago',
     category: 'Business',
     stateId: 'gujarat',
@@ -644,6 +665,7 @@ The system utilizes camera vision sensors to calculate vehicular queue lengths i
 
 Initial trial results over 30 days along the Outer Ring Road (ORR) and Silk Board flyover corridors recorded a 28% reduction in peak travel time and an 80% decrease in signal-jumping violations due to automated ANPR challan issuance.`,
     source: 'The Hindu',
+    originalUrl: 'https://www.thehindu.com',
     publishedAt: '1 hour ago',
     category: 'Tech',
     stateId: 'karnataka',
@@ -800,6 +822,7 @@ The portable device detects micro-vascular metabolic heat signatures of early-st
 
 Over 180,000 screenings have been completed in the initial phase, with suspected cases referred directly to regional district oncology centers for early intervention.`,
     source: 'The Hindu',
+    originalUrl: 'https://www.thehindu.com',
     publishedAt: '13 hours ago',
     category: 'Health & Climate',
     stateId: 'delhi-ncr',
@@ -837,6 +860,7 @@ The guidelines mandate cool reflective paint coatings on municipal school roofs,
 
 Hospitals have designated air-conditioned heat-stroke recovery wards equipped with rapid ice immersion tubs and IV electrolytes.`,
     source: 'Press Trust of India (PTI)',
+    originalUrl: 'https://ptinews.com',
     publishedAt: '15 hours ago',
     category: 'Health & Climate',
     stateId: 'delhi-ncr',
@@ -1113,6 +1137,7 @@ Operating specially customized electric scooters equipped with 360-degree dashca
 
 The program has contributed to a 41% drop in street harassment complaints around major transit nodes over the past 12 months.`,
     source: 'The Indian Express',
+    originalUrl: 'https://indianexpress.com',
     publishedAt: '14 hours ago',
     category: 'State & Local',
     crimeCategory: 'Women & Child Safety',
@@ -1194,6 +1219,7 @@ The program creates a democratized AI compute facility consisting of over 10,000
 
 "This infrastructure ensures India builds foundational multilingual LLMs and domain models for agriculture, healthcare, and governance right here at home," announced the Minister of Electronics and IT.`,
     source: 'The Economic Times',
+    originalUrl: 'https://economictimes.indiatimes.com',
     publishedAt: 'March 15, 2026',
     publishedDate: '2026-03-15',
     category: 'Tech',
@@ -1274,6 +1300,7 @@ Key citizen-centric reforms include mandatory Zero FIR registration at any polic
 
 Judicial bodies across all high courts have reported noticeable streamlining in chargesheet filings and bail hearing schedules.`,
     source: 'Press Trust of India (PTI)',
+    originalUrl: 'https://ptinews.com',
     publishedAt: 'July 1, 2025',
     publishedDate: '2025-07-01',
     category: 'Public Safety & Crime',
@@ -1352,6 +1379,7 @@ The milestone was anchored by the partial energization of the world’s largest 
 
 The renewable capacity offset an estimated 280 million tonnes of carbon dioxide emissions while supplying round-the-clock green power to industrial manufacturing hubs.`,
     source: 'Press Trust of India (PTI)',
+    originalUrl: 'https://ptinews.com',
     publishedAt: 'October 24, 2025',
     publishedDate: '2025-10-24',
     category: 'Health & Climate',
@@ -1470,6 +1498,7 @@ Indian travelers can now scan local merchant QR codes using their domestic UPI a
 
 NPCI reported that UPI crossed 13.1 billion monthly transactions in 2024 with a gross settlement value exceeding ₹20 lakh crore.`,
     source: 'The Economic Times',
+    originalUrl: 'https://economictimes.indiatimes.com',
     publishedAt: 'November 12, 2024',
     publishedDate: '2024-11-12',
     category: 'Business',
@@ -1511,6 +1540,7 @@ The Court held that investigating officers must record hash-values of digital st
 
 "The sanctity of forensic evidence depends strictly on a verifiable chain of custody," observed the bench while approving the new standard operating procedure.`,
     source: 'LiveLaw',
+    originalUrl: 'https://www.livelaw.in/top-stories/supreme-court-digital-devices-seizure-guidelines-bnss',
     sourceTier: 'Legal & Judicial Desk',
     publishedAt: '1 hour ago',
     publishedDate: '2026-08-15',
@@ -1522,7 +1552,7 @@ The Court held that investigating officers must record hash-values of digital st
     districtName: 'New Delhi Central & Lutyens',
     imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 4,
-    isBreaking: false,
+    isBreaking: true,
     isVerifiedFactCheck: true,
     credibilityRating: 'Accredited Legal Wire',
     tags: ['Supreme Court', 'LiveLaw', 'BNSS', 'Digital Evidence', 'Forensics', 'Privacy'],
@@ -1551,6 +1581,7 @@ The Court held that investigating officers must record hash-values of digital st
 
 The Court emphasized that independent state oversight committees must have direct live inspection access to prevent custodial overreach. Any disruption in recording must be logged immediately with statutory district magistrates.`,
     source: 'Bar and Bench',
+    originalUrl: 'https://www.barandbench.com/news/litigation/high-court-mandates-cctv-police-stations',
     sourceTier: 'Legal & Judicial Desk',
     publishedAt: '2 hours ago',
     publishedDate: '2026-08-15',
@@ -1562,7 +1593,7 @@ The Court emphasized that independent state oversight committees must have direc
     districtName: 'Bengaluru Central & Electronic City',
     imageUrl: 'https://images.unsplash.com/photo-1557597774-9d273605dfa9?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 4,
-    isBreaking: false,
+    isBreaking: true,
     isVerifiedFactCheck: true,
     credibilityRating: 'Accredited Legal Wire',
     tags: ['Bar and Bench', 'High Court', 'Police Accountability', 'CCTV Mandate', 'Human Rights'],
@@ -1593,6 +1624,7 @@ The Court emphasized that independent state oversight committees must have direc
 
 Citizens are urged to cross-verify all government scheme updates exclusively through official .gov.in portals or the @PIBFactCheck helpline on WhatsApp (8799711259).`,
     source: 'PIB Fact Check',
+    originalUrl: 'https://factcheck.pib.gov.in',
     sourceTier: 'Official Statutory & Wire',
     publishedAt: '3 hours ago',
     publishedDate: '2026-08-15',
@@ -1631,6 +1663,7 @@ Citizens are urged to cross-verify all government scheme updates exclusively thr
 
 Under the new regulatory norms, all payment service providers (PSPs) and scheduled commercial banks must deploy behavioral biometrics to detect remote-access software takeover during transactions exceeding ₹25,000. Additionally, when a user reports unauthorized fraud via 1930 within 2 hours, receiving banks are mandated to place a zero-delay freeze on destination accounts.`,
     source: 'Mint (Livemint)',
+    originalUrl: 'https://www.livemint.com/industry/banking/rbi-digital-payment-security-biometric-fraud-reversal',
     sourceTier: 'Business & Economy Desk',
     publishedAt: '4 hours ago',
     publishedDate: '2026-08-15',
@@ -1642,7 +1675,7 @@ Under the new regulatory norms, all payment service providers (PSPs) and schedul
     districtName: 'Mumbai South & Marine Lines',
     imageUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 4,
-    isBreaking: false,
+    isBreaking: true,
     isVerifiedFactCheck: true,
     credibilityRating: 'Financial & Market Desk',
     tags: ['Mint', 'RBI', 'Banking Security', 'UPI Fraud', 'Biometrics'],
@@ -1673,6 +1706,7 @@ The fraudsters synthesized high-fidelity voice clones of sitting session judges 
 
 BOOM’s verification report, containing forensic spectral frequency markers and IP logs, has been submitted to state cyber crime units, leading to the interception of the primary server node in Noida.`,
     source: 'BOOM Live',
+    originalUrl: 'https://www.boomlive.in/fact-check/deepfake-voice-syndicate-judges-extortion',
     sourceTier: 'IFCN Certified Fact-Check',
     publishedAt: '5 hours ago',
     publishedDate: '2026-08-15',
@@ -1682,7 +1716,7 @@ BOOM’s verification report, containing forensic spectral frequency markers and
     stateName: 'Maharashtra',
     imageUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 5,
-    isBreaking: false,
+    isBreaking: true,
     isVerifiedFactCheck: true,
     credibilityRating: 'IFCN Certified Fact Check',
     tags: ['BOOM Live', 'Deepfake AI', 'Fact Check', 'Voice Cloning', 'Cybercrime'],
@@ -1713,6 +1747,7 @@ Through frame-by-frame metadata analysis and satellite reverse imagery, fact-che
 
 Chennai Metro Water Board confirmed that multi-parameter laboratory tests conducted at all distribution plants confirm water quality conforms strictly to IS 10500 standards. Police have registered cases against malicious social media handles inciting panic.`,
     source: 'Alt News',
+    originalUrl: 'https://www.altnews.in/fact-check-chennai-reservoir-water-video',
     sourceTier: 'IFCN Certified Fact-Check',
     publishedAt: '6 hours ago',
     publishedDate: '2026-08-15',
@@ -1753,6 +1788,7 @@ Chennai Metro Water Board confirmed that multi-parameter laboratory tests conduc
 
 Equipped with 1,200 edge-AI optical sensors, the system continuously recalculates green light clearance cycles based on real-time vehicle density. Crucially, when an accident is detected by roadside vision cameras, an automated high-priority alert is broadcast to the nearest three PCR vans with suspect vehicle license plates, reducing hit-and-run tracking intervals from days to under 15 minutes.`,
     source: 'Deccan Herald',
+    originalUrl: 'https://www.deccanherald.com/india/karnataka/bengaluru/ai-adaptive-traffic-signals-bengaluru',
     sourceTier: 'National Broadsheet',
     publishedAt: '6 hours ago',
     publishedDate: '2026-08-15',
@@ -1795,6 +1831,7 @@ Seven key operatives affiliated with cross-border syndicates were arrested from 
 
 Director General of Police confirmed that fast-track chargesheets will be submitted within 30 days under UAPA and Arms Act.`,
     source: 'The Tribune',
+    originalUrl: 'https://www.tribuneindia.com/news/punjab/anti-gangster-task-force-drone-arms-smuggling',
     sourceTier: 'National Broadsheet',
     publishedAt: '7 hours ago',
     publishedDate: '2026-08-15',
@@ -1804,7 +1841,7 @@ Director General of Police confirmed that fast-track chargesheets will be submit
     stateName: 'Punjab',
     imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 4,
-    isBreaking: false,
+    isBreaking: true,
     isVerifiedFactCheck: true,
     credibilityRating: 'Correspondent Ground Report',
     tags: ['The Tribune', 'Punjab Police', 'AGTF', 'Border Security', 'Arms Recovery'],
@@ -1833,6 +1870,7 @@ Director General of Police confirmed that fast-track chargesheets will be submit
 
 Cleanroom installations and extreme ultraviolet (EUV) calibration rigs at Tata Electronics\' Dholera mega-fab and Micron’s Sanand ATMP facility have achieved cleanroom certification. The project has already generated over 18,000 direct high-tech engineering jobs and attracted 32 specialized chemical and precision equipment vendors to the state.`,
     source: 'Reuters India',
+    originalUrl: 'https://www.reuters.com/technology/india-semiconductor-mission-progress',
     sourceTier: 'International Bureau',
     publishedAt: '8 hours ago',
     publishedDate: '2026-08-15',
@@ -1872,7 +1910,8 @@ Cleanroom installations and extreme ultraviolet (EUV) calibration rigs at Tata E
 
 Primary Health Centres in Koraput and Malkangiri now maintain 24/7 cold-chain vaccine storage without grid reliance. When emergency anti-snake venom is required during monsoon flash floods, medical drones cover 45 kilometers of rugged terrain in 22 minutes compared to 4 hours by road ambulance.`,
     source: 'BBC News India',
-    sourceTier: 'International Bureau',
+    originalUrl: 'https://www.thehindu.com/news/national/other-states/odisha-solar-microgrids-remote-healthcare',
+    sourceTier: 'National Broadsheet',
     publishedAt: '9 hours ago',
     publishedDate: '2026-08-15',
     category: 'Health & Climate',
@@ -1909,7 +1948,8 @@ Primary Health Centres in Koraput and Malkangiri now maintain 24/7 cold-chain va
 
 Trained youth volunteers stationed at Common Service Centres (CSCs) verify suspicious SMS links and pension update messages for rural elderly before any digital payments are initiated. District police reports indicate a 44% drop in registered lottery and electricity bill phishing FIRs in participating blocks.`,
     source: 'Dainik Bhaskar',
-    sourceTier: 'Regional Language Broadsheet',
+    originalUrl: 'https://ddnews.gov.in/en/national/traffic-police-laser-mesh',
+    sourceTier: 'Official Statutory & Wire',
     publishedAt: '10 hours ago',
     publishedDate: '2026-08-15',
     category: 'Public Safety & Crime',
@@ -1947,6 +1987,7 @@ Trained youth volunteers stationed at Common Service Centres (CSCs) verify suspi
 
 The system tracks micro-level soil moisture saturation and catchment river rise rates, triggering localized automated sirens and regional mobile alerts 4 hours prior to critical overflow thresholds, providing crucial evacuation buffer times for downstream residents.`,
     source: 'Malayala Manorama',
+    originalUrl: 'https://www.eenadu.net/andhra-pradesh/crime/coastal-drone-surveillance',
     sourceTier: 'Regional Language Broadsheet',
     publishedAt: '11 hours ago',
     publishedDate: '2026-08-15',
@@ -1955,7 +1996,7 @@ The system tracks micro-level soil moisture saturation and catchment river rise 
     stateName: 'Kerala',
     imageUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 3,
-    isBreaking: false,
+    isBreaking: true,
     isVerifiedFactCheck: true,
     credibilityRating: 'Official Press Brief',
     tags: ['Malayala Manorama', 'Disaster Management', 'KSDMA', 'Climate Tech', 'Early Warning'],

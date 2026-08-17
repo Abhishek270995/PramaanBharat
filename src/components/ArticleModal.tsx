@@ -145,9 +145,27 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
 
         {/* Source & Date Info */}
         <div className="flex items-center flex-wrap gap-2 text-xs text-slate-500 mb-3">
-          <span className="font-extrabold text-slate-900 text-sm">{article.source}</span>
+          {(() => {
+            const srcInfo = getSourceByName(article.source);
+            const targetUrl = article.originalUrl || (srcInfo?.website ? `https://${srcInfo.website}` : null);
+            if (targetUrl) {
+              return (
+                <a
+                  href={targetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-extrabold text-slate-900 text-sm hover:text-blue-600 flex items-center gap-1 transition-colors underline-offset-2 hover:underline"
+                  title={`Open official report on ${article.source} ↗`}
+                >
+                  <span>{article.source}</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+                </a>
+              );
+            }
+            return <span className="font-extrabold text-slate-900 text-sm">{article.source}</span>;
+          })()}
           <span>•</span>
-          <span>{article.publishedAt}</span>
+          <span className="font-medium text-slate-700">{article.publishedAt}</span>
           <span>•</span>
           <span className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" /> {article.readTimeMinutes} min read

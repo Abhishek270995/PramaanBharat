@@ -19,7 +19,10 @@ import {
   Award,
   Scale,
   CheckCircle2,
-  ExternalLink
+  CheckCircle,
+  ExternalLink,
+  Clock,
+  Radio
 } from 'lucide-react';
 import { NewsArticle, LanguageCode, NewsCategory, StateInfo, DistrictInfo, CrimeCategory, TimeRangeKey, SourceTier } from '../types';
 import { ArticleCard } from './ArticleCard';
@@ -79,13 +82,41 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
   const [isVerifiedSourcesModalOpen, setIsVerifiedSourcesModalOpen] = useState<boolean>(false);
   const [breakingSlideIndex, setBreakingSlideIndex] = useState<number>(0);
   const [isHeroHovered, setIsHeroHovered] = useState<boolean>(false);
-  const [elapsedMinutes, setElapsedMinutes] = useState<number>(0);
+  
+  // Track elapsed time with real timestamp anchor so refreshing or staying on page keeps time advancing continuously
+  const [elapsedMinutes, setElapsedMinutes] = useState<number>(() => {
+    try {
+      const storedAnchor = sessionStorage.getItem('pramaan_session_anchor_time');
+      if (storedAnchor) {
+        const diff = Math.max(0, Math.floor((Date.now() - parseInt(storedAnchor, 10)) / 60000));
+        return diff;
+      } else {
+        sessionStorage.setItem('pramaan_session_anchor_time', Date.now().toString());
+        return 0;
+      }
+    } catch {
+      return 0;
+    }
+  });
 
-  // Live timer heartbeat every 30 seconds to update relative time across the page dynamically
+  // Live timer heartbeat every 20 seconds to update relative time across the page dynamically
   useEffect(() => {
-    const timer = setInterval(() => {
-      setElapsedMinutes(prev => prev + 1);
-    }, 30000);
+    const updateElapsed = () => {
+      try {
+        const storedAnchor = sessionStorage.getItem('pramaan_session_anchor_time');
+        if (storedAnchor) {
+          const diff = Math.max(0, Math.floor((Date.now() - parseInt(storedAnchor, 10)) / 60000));
+          setElapsedMinutes(diff);
+        } else {
+          sessionStorage.setItem('pramaan_session_anchor_time', Date.now().toString());
+          setElapsedMinutes(0);
+        }
+      } catch {
+        setElapsedMinutes(prev => prev + 1);
+      }
+    };
+
+    const timer = setInterval(updateElapsed, 20000);
     return () => clearInterval(timer);
   }, []);
 
@@ -183,43 +214,48 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
     searchQuery
   ]);
 
-  // Multi-slide breaking news pool with 6-8 verified top slides
+  // Multi-slide breaking news pool with 8-12 verified top slides across categories & regions
   const breakingPool = useMemo(() => {
     if (isBookmarksView || searchQuery || selectedSourceFilter !== 'All' || selectedTierFilter !== 'All') {
       return [];
     }
 
-    // 1. If location filter is active, pick all breaking or top stories for that location
-    if (selectedState || selectedDistrict) {
-      const locationBreaking = filtered.filter(a => a.isBreaking);
-      if (locationBreaking.length >= 3) return locationBreaking.slice(0, 6);
-      return filtered.slice(0, Math.min(6, filtered.length));
-    }
-
-    // 2. For All-India view: Pick high-impact verified news items from top wire & broadsheets
     const pool: NewsArticle[] = [];
     const seenIds = new Set<string>();
 
-    // First add explicit isBreaking articles
-    timeframeArticles.filter(a => a.isBreaking).forEach(a => {
-      if (!seenIds.has(a.id)) { pool.push(a); seenIds.add(a.id); }
-    });
+    // 1. If location filter is active, prioritize breaking & top stories for that location first
+    if (selectedState || selectedDistrict) {
+      filtered.filter(a => a.isBreaking).forEach(a => {
+        if (!seenIds.has(a.id)) { pool.push(a); seenIds.add(a.id); }
+      });
 
-    // Next add top verified reports from major genuine sources across states to create 6-8 rich slides
-    timeframeArticles.filter(a => 
-      a.category === 'Public Safety & Crime' || 
-      a.category === 'National' || 
-      a.category === 'Tech' ||
-      a.sourceTier === 'Official Statutory & Wire' ||
-      a.sourceTier === 'Legal & Judicial Desk'
-    ).forEach(a => {
-      if (!seenIds.has(a.id) && pool.length < 8) {
+      filtered.filter(a => a.sourceTier === 'Official Statutory & Wire' || a.sourceTier === 'Legal & Judicial Desk').forEach(a => {
+        if (!seenIds.has(a.id) && pool.length < 5) { pool.push(a); seenIds.add(a.id); }
+      });
+    }
+
+    // 2. Add high-impact national & state breaking articles across categories
+    timeframeArticles.filter(a => a.isBreaking).forEach(a => {
+      if (!seenIds.has(a.id) && pool.length < 12) {
         pool.push(a);
         seenIds.add(a.id);
       }
     });
 
-    return pool.length > 0 ? pool : timeframeArticles.slice(0, 6);
+    // 3. Supplement with high-credibility verified wire stories (PIB Fact Check, PTI, ANI, LiveLaw, Bar and Bench, The Hindu)
+    timeframeArticles.filter(a => 
+      a.sourceTier === 'Official Statutory & Wire' || 
+      a.sourceTier === 'Legal & Judicial Desk' ||
+      a.sourceTier === 'IFCN Certified Fact-Check' ||
+      a.isVerifiedFactCheck
+    ).forEach(a => {
+      if (!seenIds.has(a.id) && pool.length < 10) {
+        pool.push(a);
+        seenIds.add(a.id);
+      }
+    });
+
+    return pool.length > 0 ? pool : timeframeArticles.slice(0, 8);
   }, [filtered, timeframeArticles, isBookmarksView, searchQuery, selectedSourceFilter, selectedTierFilter, selectedState, selectedDistrict]);
 
   // Reset slide index when location or category changes
@@ -478,153 +514,193 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
       )}
 
       {/* Multi-Slide Breaking / Lead Story Hero Carousel */}
-      {activeBreakingArticle && (
-        <div 
-          className="mb-6"
-          onMouseEnter={() => setIsHeroHovered(true)}
-          onMouseLeave={() => setIsHeroHovered(false)}
-        >
-          <div className="relative rounded-3xl overflow-hidden bg-slate-900 text-white p-6 sm:p-8 shadow-xl border border-slate-800 group cursor-pointer"
-            onClick={() => onSelectArticle(activeBreakingArticle)}
-          >
-            {/* Top Bar with Breaking Tag & Multi-Slide Carousel Controls */}
-            <div className="flex items-center justify-between gap-3 relative z-10 flex-wrap mb-2">
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-rose-600 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md">
-                  <Flame className="w-3.5 h-3.5 animate-bounce" />
-                  {activeBreakingArticle.isBreaking ? 'Breaking News' : 'Top Lead Story'}
-                </span>
+      {activeBreakingArticle && (() => {
+        const srcInfo = getSourceByName(activeBreakingArticle.source);
+        const targetUrl = activeBreakingArticle.originalUrl || (srcInfo?.website ? `https://${srcInfo.website}` : null);
 
-                {breakingPool.length > 1 && (
-                  <span className="text-[11px] font-bold text-slate-400 bg-slate-800/80 px-2.5 py-0.5 rounded-full border border-slate-700">
-                    Slide {breakingSlideIndex + 1} of {breakingPool.length}
+        return (
+          <div 
+            className="mb-6"
+            onMouseEnter={() => setIsHeroHovered(true)}
+            onMouseLeave={() => setIsHeroHovered(false)}
+          >
+            <div className="relative rounded-3xl overflow-hidden bg-slate-900 text-white p-6 sm:p-8 shadow-2xl border border-slate-800 group cursor-pointer"
+              onClick={() => onSelectArticle(activeBreakingArticle)}
+            >
+              {/* Subtle background glow */}
+              <div className="absolute top-0 right-0 w-96 h-96 bg-rose-600/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+              <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
+
+              {/* Top Bar with Breaking Tag, Live Ticker & Multi-Slide Controls */}
+              <div className="flex items-center justify-between gap-3 relative z-10 flex-wrap mb-4">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <span className="px-3.5 py-1 rounded-full bg-linear-to-r from-rose-600 to-red-600 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-rose-900/40 animate-pulse">
+                    <Radio className="w-3.5 h-3.5" />
+                    {activeBreakingArticle.isBreaking ? 'Live Breaking News' : 'Top Verified Story'}
                   </span>
+
+                  {breakingPool.length > 1 && (
+                    <span className="text-[11px] font-bold text-slate-300 bg-slate-800/90 px-3 py-1 rounded-full border border-slate-700 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                      Slide {breakingSlideIndex + 1} of {breakingPool.length}
+                    </span>
+                  )}
+
+                  {isHeroHovered && breakingPool.length > 1 && (
+                    <span className="text-[10px] text-amber-300/90 bg-amber-950/60 px-2.5 py-0.5 rounded-md border border-amber-800/40">
+                      Paused on hover
+                    </span>
+                  )}
+                </div>
+
+                {/* Multi-slide Navigation Controls */}
+                {breakingPool.length > 1 && (
+                  <div className="flex items-center gap-2 bg-slate-800/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-700 shadow-md">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setBreakingSlideIndex(prev => (prev - 1 + breakingPool.length) % breakingPool.length);
+                      }}
+                      className="w-7 h-7 rounded-full bg-slate-700 hover:bg-rose-600 text-white flex items-center justify-center text-sm font-bold transition-all cursor-pointer shadow-xs"
+                      title="Previous breaking news slide"
+                    >
+                      ‹
+                    </button>
+
+                    <div className="flex items-center gap-1.5 px-1">
+                      {breakingPool.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setBreakingSlideIndex(i);
+                          }}
+                          className={`h-2 rounded-full transition-all cursor-pointer ${
+                            breakingSlideIndex === i 
+                              ? 'bg-rose-500 w-6 shadow-sm shadow-rose-500/50' 
+                              : 'bg-slate-600 hover:bg-slate-400 w-2'
+                          }`}
+                          title={`Jump to Breaking News #${i + 1}`}
+                        />
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setBreakingSlideIndex(prev => (prev + 1) % breakingPool.length);
+                      }}
+                      className="w-7 h-7 rounded-full bg-slate-700 hover:bg-rose-600 text-white flex items-center justify-center text-sm font-bold transition-all cursor-pointer shadow-xs"
+                      title="Next breaking news slide"
+                    >
+                      ›
+                    </button>
+                  </div>
                 )}
               </div>
 
-              {/* Multi-slide Navigation Controls */}
-              {breakingPool.length > 1 && (
-                <div className="flex items-center gap-2 bg-slate-800/90 backdrop-blur-md px-3 py-1.5 rounded-full border border-slate-700">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setBreakingSlideIndex(prev => (prev - 1 + breakingPool.length) % breakingPool.length);
-                    }}
-                    className="w-6 h-6 rounded-full bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
-                    title="Previous breaking news slide"
-                  >
-                    ‹
-                  </button>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10">
+                <div className="lg:col-span-8">
+                  {/* Source Attribution & Live Dynamic Timestamp */}
+                  <div className="flex items-center gap-2 text-xs text-slate-300 mb-3 flex-wrap">
+                    {targetUrl ? (
+                      <a
+                        href={targetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-bold text-white hover:text-blue-400 underline-offset-4 hover:underline flex items-center gap-1.5 transition-colors px-2.5 py-1 rounded-md bg-slate-800/90 border border-slate-700 hover:border-blue-500 shadow-xs"
+                        title={`Open official report on ${activeBreakingArticle.source} ↗`}
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>{activeBreakingArticle.source}</span>
+                        <ExternalLink className="w-3 h-3 text-blue-400" />
+                      </a>
+                    ) : (
+                      <span className="font-bold text-white px-2.5 py-1 rounded-md bg-slate-800/90 border border-slate-700 flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>{activeBreakingArticle.source}</span>
+                      </span>
+                    )}
 
-                  <div className="flex items-center gap-1.5">
-                    {breakingPool.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setBreakingSlideIndex(i);
-                        }}
-                        className={`h-2 rounded-full transition-all cursor-pointer ${
-                          breakingSlideIndex === i ? 'bg-rose-500 w-5' : 'bg-slate-600 hover:bg-slate-400 w-2'
-                        }`}
-                        title={`Slide ${i + 1}`}
-                      />
-                    ))}
+                    <span>•</span>
+                    <span className="text-amber-300 font-semibold flex items-center gap-1 bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-800/30">
+                      <Clock className="w-3 h-3 text-amber-400" />
+                      {getLiveTimeAgo(activeBreakingArticle.publishedAt, elapsedMinutes, activeBreakingArticle.publishedTimestamp)}
+                    </span>
+
+                    {activeBreakingArticle.stateName && (
+                      <>
+                        <span>•</span>
+                        <span className="text-blue-300 font-semibold flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-blue-400" />
+                          {activeBreakingArticle.stateName}
+                        </span>
+                      </>
+                    )}
+                    {activeBreakingArticle.districtName && (
+                      <span className="text-emerald-300 font-medium">({activeBreakingArticle.districtName})</span>
+                    )}
                   </div>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setBreakingSlideIndex(prev => (prev + 1) % breakingPool.length);
-                    }}
-                    className="w-6 h-6 rounded-full bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer"
-                    title="Next breaking news slide"
-                  >
-                    ›
-                  </button>
+                  <h3 className="text-xl sm:text-3xl font-black text-white group-hover:text-blue-300 transition-colors leading-tight tracking-tight">
+                    {(activeBreakingArticle.translatedTitles && activeBreakingArticle.translatedTitles[currentLanguage]) || activeBreakingArticle.title}
+                  </h3>
+
+                  <p className="text-sm text-slate-300 mt-3 line-clamp-3 leading-relaxed">
+                    {activeBreakingArticle.snippet}
+                  </p>
+
+                  {/* Actions Bar with Direct News Source Redirect */}
+                  <div className="flex items-center flex-wrap gap-2.5 mt-5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onQuickAiSummary(activeBreakingArticle);
+                      }}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md hover:shadow-blue-600/30 cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>AI 3-Point Takeaway</span>
+                    </button>
+
+                    {/* Direct Redirection to Original News Publisher Website */}
+                    {targetUrl && (
+                      <a
+                        href={targetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/30 text-xs font-black transition-all shadow-md hover:shadow-emerald-600/30 cursor-pointer"
+                        title={`Open complete story directly on ${activeBreakingArticle.source} (External Link)`}
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-white" />
+                        <span>Read on {activeBreakingArticle.source} ↗</span>
+                      </a>
+                    )}
+
+                    <span className="text-xs text-slate-400 ml-auto sm:ml-2">
+                      ⏱️ {activeBreakingArticle.readTimeMinutes} min read
+                    </span>
+                  </div>
                 </div>
-              )}
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center relative z-10 mt-4 animate-in fade-in duration-300">
-              <div className="lg:col-span-8">
-                <div className="flex items-center gap-2 text-xs text-slate-400 mb-2 flex-wrap">
-                  <span className="font-bold text-white">{activeBreakingArticle.source}</span>
-                  <span>•</span>
-                  <span className="text-amber-300 font-semibold">{getLiveTimeAgo(activeBreakingArticle.publishedAt, elapsedMinutes)}</span>
-                  {activeBreakingArticle.stateName && (
-                    <>
-                      <span>•</span>
-                      <span className="text-blue-400 font-semibold">📍 {activeBreakingArticle.stateName}</span>
-                    </>
-                  )}
-                  {activeBreakingArticle.districtName && (
-                    <span className="text-emerald-400 font-semibold">({activeBreakingArticle.districtName})</span>
-                  )}
-                </div>
-
-                <h3 className="text-xl sm:text-3xl font-black text-white group-hover:text-blue-400 transition-colors leading-tight tracking-tight">
-                  {(activeBreakingArticle.translatedTitles && activeBreakingArticle.translatedTitles[currentLanguage]) || activeBreakingArticle.title}
-                </h3>
-
-                <p className="text-sm text-slate-300 mt-3 line-clamp-3 leading-relaxed">
-                  {activeBreakingArticle.snippet}
-                </p>
-
-                <div className="flex items-center flex-wrap gap-2 mt-4">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onQuickAiSummary(activeBreakingArticle);
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                    <span>AI 3-Point Summary</span>
-                  </button>
-
-                  {/* Direct Redirection to Original News Publisher */}
-                  {(() => {
-                    const srcInfo = getSourceByName(activeBreakingArticle.source);
-                    const targetUrl = activeBreakingArticle.originalUrl || (srcInfo?.website ? `https://${srcInfo.website}` : null);
-                    if (targetUrl) {
-                      return (
-                        <a
-                          href={targetUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-bold transition-all shadow-xs cursor-pointer"
-                          title={`Open official report on ${activeBreakingArticle.source} ↗`}
-                        >
-                          <ExternalLink className="w-3.5 h-3.5 text-blue-400" />
-                          <span>Read on {activeBreakingArticle.source} ↗</span>
-                        </a>
-                      );
-                    }
-                    return null;
-                  })()}
-
-                  <span className="text-xs text-slate-400">
-                    ⏱️ {activeBreakingArticle.readTimeMinutes} min read
-                  </span>
-                </div>
+                {activeBreakingArticle.imageUrl && (
+                  <div className="lg:col-span-4 rounded-2xl overflow-hidden h-48 sm:h-56 bg-slate-800 border border-slate-700 relative shadow-inner">
+                    <img
+                      src={activeBreakingArticle.imageUrl}
+                      alt={activeBreakingArticle.title}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-linear-to-t from-slate-900/60 via-transparent to-transparent pointer-events-none" />
+                  </div>
+                )}
               </div>
-
-              {activeBreakingArticle.imageUrl && (
-                <div className="lg:col-span-4 rounded-2xl overflow-hidden h-48 sm:h-56 bg-slate-800 border border-slate-700">
-                  <img
-                    src={activeBreakingArticle.imageUrl}
-                    alt={activeBreakingArticle.title}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-              )}
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Grid of Articles */}
       {filtered.length > 0 ? (

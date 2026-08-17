@@ -184,22 +184,50 @@ export function getTimeframeLabel(
 }
 
 /**
- * Calculates dynamically progressing relative time so '25 mins ago' advances in real-time
+ * Calculates dynamically progressing relative time so '25 mins ago' advances in real-time as the clock ticks
  */
-export function getLiveTimeAgo(publishedAtStr: string, sessionElapsedMinutes: number = 0): string {
+export function getLiveTimeAgo(
+  publishedAtStr: string,
+  sessionElapsedMinutes: number = 0,
+  publishedTimestamp?: number
+): string {
+  if (publishedTimestamp && publishedTimestamp > 0) {
+    const diffMs = Date.now() - publishedTimestamp;
+    const diffMins = Math.max(0, Math.floor(diffMs / 60000));
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins === 1) return '1 min ago';
+    if (diffMins < 60) return `${diffMins} mins ago`;
+    
+    const hours = Math.floor(diffMins / 60);
+    const remainingMins = diffMins % 60;
+    if (hours < 24) {
+      return remainingMins > 0 ? `${hours}h ${remainingMins}m ago` : (hours === 1 ? '1 hour ago' : `${hours} hours ago`);
+    }
+    
+    const days = Math.floor(hours / 24);
+    return days === 1 ? 'Yesterday' : `${days} days ago`;
+  }
+
   if (!publishedAtStr) return 'Just now';
   
-  // If it's a fixed date like 'March 15, 2026' or '2026-05-19', leave intact
-  if (publishedAtStr.includes('202') || publishedAtStr.includes('Jan') || publishedAtStr.includes('Feb') || publishedAtStr.includes('Mar') || publishedAtStr.includes('Apr') || publishedAtStr.includes('May') || publishedAtStr.includes('Jun') || publishedAtStr.includes('Jul')) {
+  // If it's a fixed historical date like 'March 15, 2026' or '2026-05-19', leave intact
+  if (
+    publishedAtStr.includes('Jan') || publishedAtStr.includes('Feb') || 
+    publishedAtStr.includes('Mar') || publishedAtStr.includes('Apr') || 
+    publishedAtStr.includes('May') || publishedAtStr.includes('Jun') || 
+    publishedAtStr.includes('Jul') || publishedAtStr.includes('2024') || 
+    publishedAtStr.includes('2025')
+  ) {
     return publishedAtStr;
   }
 
   // Parse initial minutes or hours from relative string
   let initialMinutes = 15;
-  const lower = publishedAtStr.toLowerCase();
+  const lower = publishedAtStr.toLowerCase().trim();
   
   if (lower.includes('just now')) {
-    initialMinutes = 2;
+    initialMinutes = 1;
   } else {
     const matchMin = lower.match(/(\d+)\s*min/);
     if (matchMin && matchMin[1]) {
@@ -208,21 +236,31 @@ export function getLiveTimeAgo(publishedAtStr: string, sessionElapsedMinutes: nu
       const matchHr = lower.match(/(\d+)\s*hour/);
       if (matchHr && matchHr[1]) {
         initialMinutes = parseInt(matchHr[1], 10) * 60;
+      } else if (lower.includes('yesterday') || lower.includes('1 day')) {
+        initialMinutes = 24 * 60;
+      } else if (lower.includes('days ago')) {
+        const matchDays = lower.match(/(\d+)\s*day/);
+        if (matchDays && matchDays[1]) {
+          initialMinutes = parseInt(matchDays[1], 10) * 24 * 60;
+        } else {
+          return publishedAtStr;
+        }
       } else {
         return publishedAtStr;
       }
     }
   }
 
-  const totalMinutes = initialMinutes + sessionElapsedMinutes;
+  const totalMinutes = Math.max(1, initialMinutes + sessionElapsedMinutes);
   
   if (totalMinutes < 1) return 'Just now';
+  if (totalMinutes === 1) return '1 min ago';
   if (totalMinutes < 60) return `${totalMinutes} mins ago`;
   
   const hours = Math.floor(totalMinutes / 60);
   const remainingMins = totalMinutes % 60;
   if (hours < 24) {
-    return hours === 1 ? (remainingMins > 0 ? `1h ${remainingMins}m ago` : '1 hour ago') : `${hours} hours ago`;
+    return remainingMins > 0 ? `${hours}h ${remainingMins}m ago` : (hours === 1 ? '1 hour ago' : `${hours} hours ago`);
   }
   
   const days = Math.floor(hours / 24);

@@ -186,6 +186,8 @@ export interface NewsArticle {
   sharesCount: number;
   relatedArticleIds?: string[];
   summaryPoints?: string[];
+  originalUrl?: string;
+  publishedTimestamp?: number;
 }
 
 export interface LiveSafetyAlert {
