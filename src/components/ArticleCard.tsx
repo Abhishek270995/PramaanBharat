@@ -12,7 +12,7 @@ import {
   MapPin
 } from 'lucide-react';
 import { NewsArticle, LanguageCode } from '../types';
-import { getSourceByName } from '../data/verifiedSources';
+import { getSourceByName, getArticleSourceUrl } from '../data/verifiedSources';
 import { getLiveTimeAgo } from '../utils/dateUtils';
 
 interface ArticleCardProps {
@@ -98,8 +98,7 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
         <div className="flex items-center justify-between gap-2 mb-2.5 flex-wrap">
           <div className="flex items-center gap-1.5 flex-wrap">
             {(() => {
-              const srcInfo = getSourceByName(article.source);
-              const targetUrl = article.originalUrl || (srcInfo?.website ? `https://${srcInfo.website}` : null);
+              const targetUrl = getArticleSourceUrl(article);
               if (targetUrl) {
                 return (
                   <a
@@ -108,7 +107,7 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
                     className="font-bold text-xs text-slate-900 hover:text-blue-600 hover:underline flex items-center gap-1 transition-colors"
-                    title={`Open verified report on ${article.source} ↗`}
+                    title={`Open exact report on ${article.source} ↗`}
                   >
                     <span>{article.source}</span>
                     <ExternalLink className="w-2.5 h-2.5 text-slate-400 group-hover:text-blue-500" />

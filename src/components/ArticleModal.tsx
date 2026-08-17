@@ -16,7 +16,7 @@ import {
   Crown
 } from 'lucide-react';
 import { NewsArticle, LanguageCode } from '../types';
-import { getSourceByName } from '../data/verifiedSources';
+import { getSourceByName, getArticleSourceUrl } from '../data/verifiedSources';
 import { UserSubscription, consumeAiCredit } from '../utils/subscriptionUtils';
 
 interface ArticleModalProps {
@@ -146,8 +146,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
         {/* Source & Date Info */}
         <div className="flex items-center flex-wrap gap-2 text-xs text-slate-500 mb-3">
           {(() => {
-            const srcInfo = getSourceByName(article.source);
-            const targetUrl = article.originalUrl || (srcInfo?.website ? `https://${srcInfo.website}` : null);
+            const targetUrl = getArticleSourceUrl(article);
             if (targetUrl) {
               return (
                 <a
@@ -155,7 +154,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-extrabold text-slate-900 text-sm hover:text-blue-600 flex items-center gap-1 transition-colors underline-offset-2 hover:underline"
-                  title={`Open official report on ${article.source} ↗`}
+                  title={`Open exact report on ${article.source} ↗`}
                 >
                   <span>{article.source}</span>
                   <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
@@ -320,8 +319,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
 
             {/* Direct Official Source Link */}
             {(() => {
-              const srcInfo = getSourceByName(article.source);
-              const targetUrl = article.originalUrl || (srcInfo?.website ? `https://${srcInfo.website}` : null);
+              const targetUrl = getArticleSourceUrl(article);
               if (targetUrl) {
                 return (
                   <a
@@ -329,7 +327,7 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold transition-colors cursor-pointer"
-                    title={`Open verified report on ${article.source}`}
+                    title={`Open exact report on ${article.source}`}
                   >
                     <ExternalLink className="w-4 h-4 text-blue-600" />
                     <span>Read on {article.source} ↗</span>

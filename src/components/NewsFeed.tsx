@@ -27,7 +27,7 @@ import {
 import { NewsArticle, LanguageCode, NewsCategory, StateInfo, DistrictInfo, CrimeCategory, TimeRangeKey, SourceTier } from '../types';
 import { ArticleCard } from './ArticleCard';
 import { isArticleInTimeRange, getTimeframeLabel, getLiveTimeAgo } from '../utils/dateUtils';
-import { VERIFIED_SOURCES_CATALOG, getSourceByName } from '../data/verifiedSources';
+import { VERIFIED_SOURCES_CATALOG, getSourceByName, getArticleSourceUrl } from '../data/verifiedSources';
 import { VerifiedSourcesModal } from './VerifiedSourcesModal';
 
 interface NewsFeedProps {
@@ -516,7 +516,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
       {/* Multi-Slide Breaking / Lead Story Hero Carousel */}
       {activeBreakingArticle && (() => {
         const srcInfo = getSourceByName(activeBreakingArticle.source);
-        const targetUrl = activeBreakingArticle.originalUrl || (srcInfo?.website ? `https://${srcInfo.website}` : null);
+        const targetUrl = getArticleSourceUrl(activeBreakingArticle);
 
         return (
           <div 
