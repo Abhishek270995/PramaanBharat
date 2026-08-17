@@ -264,6 +264,49 @@ export default function App() {
     window.scrollTo({ top: 180, behavior: 'smooth' });
   };
 
+  // Real-time Live RSS Wire Fetcher (Free, Quota-independent, Immediate)
+  const fetchLiveWireNews = async (category?: NewsCategory, state?: string) => {
+    try {
+      const targetCat = category || activeCategory;
+      const targetState = state || selectedState?.name;
+      const res = await fetch('/api/news/live-wire', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: targetCat === 'All' ? 'National' : targetCat,
+          state: targetState,
+          count: 6
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.articles) && data.articles.length > 0) {
+          setAllArticles(prev => {
+            const existingTitles = new Set(prev.map(a => a.title.toLowerCase().trim()));
+            const newItems = data.articles.filter((a: NewsArticle) => !existingTitles.has(a.title.toLowerCase().trim()));
+            return [...newItems, ...prev];
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Live wire sync notice:', err);
+    }
+  };
+
+  // Initial load and periodic 5-minute background wire sync
+  useEffect(() => {
+    // Initial fetch of live wire news on application startup
+    fetchLiveWireNews();
+
+    // Periodic background wire sync every 5 minutes
+    const wireInterval = setInterval(() => {
+      fetchLiveWireNews();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(wireInterval);
+  }, []);
+
   const handleFetchLiveNews = async (category?: NewsCategory, state?: string) => {
     const creditCheck = consumeAiCredit();
     if (!creditCheck.success) {
@@ -284,7 +327,7 @@ export default function App() {
         body: JSON.stringify({
           category: targetCat === 'All' ? 'National' : targetCat,
           state: targetState,
-          count: 3
+          count: 4
         })
       });
 
@@ -294,20 +337,23 @@ export default function App() {
       }
 
       if (!res.ok) {
-        throw new Error(`Server returned ${res.status}`);
+        // Fallback to direct wire fetch if AI endpoint fails or is throttled
+        await fetchLiveWireNews(category, state);
+        return;
       }
 
       const data = await res.json();
       if (data && Array.isArray(data.articles) && data.articles.length > 0) {
         setAllArticles(prev => {
-          // Prepend new articles avoiding ID collisions
-          const existingIds = new Set(prev.map(a => a.id));
-          const newItems = data.articles.filter((a: NewsArticle) => !existingIds.has(a.id));
+          const existingTitles = new Set(prev.map(a => a.title.toLowerCase().trim()));
+          const newItems = data.articles.filter((a: NewsArticle) => !existingTitles.has(a.title.toLowerCase().trim()));
           return [...newItems, ...prev];
         });
       }
     } catch (err) {
       console.error('Error fetching live news:', err);
+      // Fallback to direct RSS wire fetch
+      await fetchLiveWireNews(category, state);
     } finally {
       setIsFetchingLiveNews(false);
     }
