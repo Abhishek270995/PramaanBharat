@@ -391,24 +391,23 @@ export const getArticleSourceUrl = (article: { title: string; source: string; or
     .replace(/[^\w\s-]/gi, ' ')
     .trim();
 
-  // If the article has an explicit, specific deep-link originalUrl (not a naked domain), use it directly
+  // If the article has an explicit, verified live RSS wire originalUrl (e.g. from Google News wire or verified query), use it directly
   if (article.originalUrl && typeof article.originalUrl === 'string') {
     const raw = article.originalUrl.trim();
     if (raw.startsWith('http')) {
-      // Check if it is a specific article URL (has path beyond domain)
-      const isNakedDomain = /^https?:\/\/[^\/]+\/?$/i.test(raw);
-      if (!isNakedDomain && !raw.includes('news.google.com') && !raw.endsWith('/')) {
+      // Only trust authentic live RSS syndication links or active query URLs
+      if (raw.includes('news.google.com/rss/articles') || raw.includes('?search=') || raw.includes('?search_text=') || (raw.includes('?q=') && !raw.includes('news.google.com/search'))) {
         return raw;
       }
     }
   }
 
   // Extract core keywords from the headline
-  const stopWords = new Set(['and', 'the', 'for', 'with', 'after', 'from', 'into', 'over', 'under', 'across', 'all', 'out', 'has', 'have', 'had', 'its', 'their', 'this', 'that', 'with', 'amid', 'launch', 'launches', 'busting', 'busts']);
+  const stopWords = new Set(['and', 'the', 'for', 'with', 'after', 'from', 'into', 'over', 'under', 'across', 'all', 'out', 'has', 'have', 'had', 'its', 'their', 'this', 'that', 'with', 'amid', 'launch', 'launches', 'busting', 'busts', 'cases', 'orders', 'guidelines']);
   const keywords = cleanTitle
     .split(/\s+/)
     .filter(w => w.length > 2 && !stopWords.has(w.toLowerCase()))
-    .slice(0, 6)
+    .slice(0, 5)
     .join(' ');
 
   const encodedKeywords = encodeURIComponent(keywords || cleanTitle);
@@ -449,16 +448,16 @@ export const getArticleSourceUrl = (article: { title: string; source: string; or
     return `https://www.altnews.in/?s=${encodedKeywords}`;
   }
   if (sLower.includes('livemint') || sLower.includes('mint')) {
-    return `https://www.livemint.com/search?q=${encodedKeywords}`;
+    return `https://www.livemint.com/topic/${encodeURIComponent((keywords || cleanTitle).replace(/\s+/g, '-'))}`;
   }
   if (sLower.includes('deccan herald')) {
     return `https://www.deccanherald.com/search?q=${encodedKeywords}`;
   }
   if (sLower.includes('tribune')) {
-    return `https://www.tribuneindia.com/search?q=${encodedKeywords}`;
+    return `https://news.google.com/search?q=${encodeURIComponent(`"${cleanTitle}" The Tribune`)}`;
   }
   if (sLower.includes('deccan chronicle')) {
-    return `https://www.deccanchronicle.com/search?q=${encodedKeywords}`;
+    return `https://news.google.com/search?q=${encodeURIComponent(`"${cleanTitle}" Deccan Chronicle`)}`;
   }
   if (sLower.includes('telegraph')) {
     return `https://www.telegraphindia.com/search?search_text=${encodedKeywords}`;
@@ -467,10 +466,10 @@ export const getArticleSourceUrl = (article: { title: string; source: string; or
     return `https://economictimes.indiatimes.com/topic/${encodeURIComponent((keywords || cleanTitle).replace(/\s+/g, '-'))}`;
   }
   if (sLower.includes('ani') || sLower.includes('asian news international')) {
-    return `https://aninews.in/search?q=${encodedKeywords}`;
+    return `https://news.google.com/search?q=${encodeURIComponent(`"${cleanTitle}" ANI News`)}`;
   }
   if (sLower.includes('eenadu')) {
-    return `https://www.eenadu.net/search?q=${encodedKeywords}`;
+    return `https://news.google.com/search?q=${encodeURIComponent(`"${cleanTitle}" Eenadu`)}`;
   }
   if (sLower.includes('reuters')) {
     return `https://www.reuters.com/site-search/?query=${encodedKeywords}`;
