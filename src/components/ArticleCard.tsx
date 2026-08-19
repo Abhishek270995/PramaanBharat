@@ -134,7 +134,7 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
             })()}
             <span className="text-slate-300">•</span>
             <span className="text-[11px] text-slate-500 font-medium">
-              {getLiveTimeAgo(article.publishedAt, elapsedMinutes)}
+              {getLiveTimeAgo(article.publishedAt, elapsedMinutes, article.publishedTimestamp)}
             </span>
           </div>
 

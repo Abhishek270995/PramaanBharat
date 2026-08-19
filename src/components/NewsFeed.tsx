@@ -83,40 +83,20 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
   const [breakingSlideIndex, setBreakingSlideIndex] = useState<number>(0);
   const [isHeroHovered, setIsHeroHovered] = useState<boolean>(false);
   
-  // Track elapsed time with real timestamp anchor so refreshing or staying on page keeps time advancing continuously
-  const [elapsedMinutes, setElapsedMinutes] = useState<number>(() => {
-    try {
-      const storedAnchor = sessionStorage.getItem('pramaan_session_anchor_time');
-      if (storedAnchor) {
-        const diff = Math.max(0, Math.floor((Date.now() - parseInt(storedAnchor, 10)) / 60000));
-        return diff;
-      } else {
-        sessionStorage.setItem('pramaan_session_anchor_time', Date.now().toString());
-        return 0;
-      }
-    } catch {
-      return 0;
-    }
-  });
+  // Track elapsed time with fresh session start so visits and refreshes start clean without stale multi-day anchor drift
+  const [elapsedMinutes, setElapsedMinutes] = useState<number>(0);
 
-  // Live timer heartbeat every 20 seconds to update relative time across the page dynamically
+  // Live timer heartbeat every 15 seconds to update relative time across the page dynamically
   useEffect(() => {
+    sessionStorage.removeItem('pramaan_session_anchor_time');
+    const startTime = Date.now();
+
     const updateElapsed = () => {
-      try {
-        const storedAnchor = sessionStorage.getItem('pramaan_session_anchor_time');
-        if (storedAnchor) {
-          const diff = Math.max(0, Math.floor((Date.now() - parseInt(storedAnchor, 10)) / 60000));
-          setElapsedMinutes(diff);
-        } else {
-          sessionStorage.setItem('pramaan_session_anchor_time', Date.now().toString());
-          setElapsedMinutes(0);
-        }
-      } catch {
-        setElapsedMinutes(prev => prev + 1);
-      }
+      const diff = Math.max(0, Math.floor((Date.now() - startTime) / 60000));
+      setElapsedMinutes(diff);
     };
 
-    const timer = setInterval(updateElapsed, 20000);
+    const timer = setInterval(updateElapsed, 15000);
     return () => clearInterval(timer);
   }, []);
 

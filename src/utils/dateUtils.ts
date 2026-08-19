@@ -251,7 +251,9 @@ export function getLiveTimeAgo(
     }
   }
 
-  const totalMinutes = Math.max(1, initialMinutes + sessionElapsedMinutes);
+  // Clamp session elapsed minutes to prevent unbounded growth from stale local storage
+  const activeElapsed = Math.min(180, Math.max(0, sessionElapsedMinutes));
+  const totalMinutes = Math.max(1, initialMinutes + activeElapsed);
   
   if (totalMinutes < 1) return 'Just now';
   if (totalMinutes === 1) return '1 min ago';
@@ -264,5 +266,5 @@ export function getLiveTimeAgo(
   }
   
   const days = Math.floor(hours / 24);
-  return days === 1 ? '1 day ago' : `${days} days ago`;
+  return days === 1 ? 'Yesterday' : `${days} days ago`;
 }
