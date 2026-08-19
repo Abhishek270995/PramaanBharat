@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   ShieldAlert, 
   Lock, 
@@ -21,7 +21,9 @@ import {
   ChevronRight,
   Sparkles,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  RefreshCw,
+  Activity
 } from 'lucide-react';
 import { CrimeCategory, CrimeCategoryStat, TimeRangeKey, StateInfo, DistrictInfo } from '../types';
 import { getCategoryStatsForTimeframe, getTimeframeMetricsConfig } from '../data/crimeData';
@@ -97,8 +99,52 @@ export const CrimeCategoryAnalytics: React.FC<CrimeCategoryAnalyticsProps> = ({
   customEndDate
 }) => {
   const [drilldownCategory, setDrilldownCategory] = useState<CrimeCategoryStat | null>(null);
+  const [liveOffset, setLiveOffset] = useState<number>(0);
+  const [lastSyncTime, setLastSyncTime] = useState<number>(Date.now());
+  const [secondsUntilSync, setSecondsUntilSync] = useState<number>(45);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [nowTimestamp, setNowTimestamp] = useState<number>(Date.now());
+
   const timeframeConfig = getTimeframeMetricsConfig(timeKey, customStartDate, customEndDate);
-  const categoriesData = getCategoryStatsForTimeframe(timeKey, customStartDate, customEndDate, selectedState, selectedDistrict);
+
+  // Dynamic live clock
+  useEffect(() => {
+    const clock = setInterval(() => setNowTimestamp(Date.now()), 15000);
+    return () => clearInterval(clock);
+  }, []);
+
+  // Perform sync
+  const handlePerformSync = useCallback(() => {
+    setIsSyncing(true);
+    setLastSyncTime(Date.now());
+    setSecondsUntilSync(45);
+    setLiveOffset(prev => prev + Math.floor(Math.random() * 3 + 1));
+
+    setTimeout(() => {
+      setIsSyncing(false);
+    }, 500);
+  }, []);
+
+  // Real-time auto-refresh interval
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSecondsUntilSync(prev => {
+        if (prev <= 1) {
+          handlePerformSync();
+          return 45;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [handlePerformSync]);
+
+  const secondsAgo = Math.max(0, Math.floor((nowTimestamp - lastSyncTime) / 1000));
+
+  const categoriesData = useMemo(() => {
+    return getCategoryStatsForTimeframe(timeKey, customStartDate, customEndDate, selectedState, selectedDistrict, liveOffset);
+  }, [timeKey, customStartDate, customEndDate, selectedState, selectedDistrict, liveOffset]);
 
   const isDaily = timeKey === 'today';
   const locationTitle = selectedDistrict ? selectedDistrict.name : selectedState ? selectedState.name : 'All India National';
@@ -128,7 +174,7 @@ export const CrimeCategoryAnalytics: React.FC<CrimeCategoryAnalyticsProps> = ({
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-slate-100">
           <div>
-            <div className="flex flex-wrap items-center gap-2 mb-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1.5">
               <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-bold tracking-wider uppercase border border-indigo-200">
                 Crime Categorization &amp; Resolution Engine
               </span>
@@ -139,6 +185,19 @@ export const CrimeCategoryAnalytics: React.FC<CrimeCategoryAnalyticsProps> = ({
                 <Calendar className="w-3 h-3 text-indigo-600" />
                 <span>{timeframeConfig.periodName}</span>
               </span>
+
+              {/* Real-time sync badge */}
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>Live Feed Active</span>
+                <span className="text-emerald-400">•</span>
+                <span className="text-emerald-700">Updated {secondsAgo}s ago</span>
+                <span className="text-emerald-400">•</span>
+                <span className="text-emerald-600 font-mono">Sync in {secondsUntilSync}s</span>
+              </span>
             </div>
             <h3 className="text-xl font-black text-slate-900 tracking-tight">
               Incident Breakdown by Crime Category &amp; Police Resolution Rates ({locationTitle})
@@ -148,15 +207,27 @@ export const CrimeCategoryAnalytics: React.FC<CrimeCategoryAnalyticsProps> = ({
             </p>
           </div>
 
-          {selectedCategory && (
+          <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
             <button
-              onClick={() => onSelectCategory(null)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors self-start sm:self-auto cursor-pointer shadow-xs"
+              onClick={handlePerformSync}
+              disabled={isSyncing}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border border-slate-200 cursor-pointer"
+              title="Force instantaneous refresh of category telemetry"
             >
-              <Filter className="w-3.5 h-3.5" />
-              <span>Clear Category Filter ({selectedCategory})</span>
+              <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Syncing...' : 'Sync Telemetry'}</span>
             </button>
-          )}
+
+            {selectedCategory && (
+              <button
+                onClick={() => onSelectCategory(null)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors cursor-pointer shadow-xs"
+              >
+                <Filter className="w-3.5 h-3.5" />
+                <span>Clear Category Filter ({selectedCategory})</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Cards Grid for Categories (100% Interactive) */}

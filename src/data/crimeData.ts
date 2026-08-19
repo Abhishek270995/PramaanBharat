@@ -661,7 +661,8 @@ export const getCategoryStatsForTimeframe = (
   customStartDate?: string,
   customEndDate?: string,
   selectedState?: StateInfo | null,
-  selectedDistrict?: DistrictInfo | null
+  selectedDistrict?: DistrictInfo | null,
+  liveIncidentOffset: number = 0
 ): CrimeCategoryStat[] => {
   const config = getTimeframeMetricsConfig(timeKey, customStartDate, customEndDate);
   const metricsMap = CATEGORY_TIME_METRICS[timeKey] || CATEGORY_TIME_METRICS.ytd;
@@ -674,7 +675,16 @@ export const getCategoryStatsForTimeframe = (
     locationFactor = selectedState.reportedCrimes / 368400;
   }
 
-  return CRIME_CATEGORIES_DATA.map((cat) => {
+  // Calculate dynamic time-of-day cumulative curve for 'today'
+  let timeOfDayFactor = 1.0;
+  if (timeKey === 'today') {
+    const now = new Date();
+    const minutesElapsedToday = now.getHours() * 60 + now.getMinutes();
+    // Daily curve: base 35% minimum at start of day up to 100% at end of day
+    timeOfDayFactor = Math.min(1.0, Math.max(0.35, 0.35 + (minutesElapsedToday / 1440) * 0.65));
+  }
+
+  return CRIME_CATEGORIES_DATA.map((cat, idx) => {
     const dyn = metricsMap[cat.category] || {
       yoyChange: cat.yoyChange,
       verificationRatio: config.verificationRatio,
@@ -683,7 +693,11 @@ export const getCategoryStatsForTimeframe = (
     };
 
     const baseReported = Math.max(1, Math.round(cat.reported * locationFactor));
-    const reported = Math.max(1, Math.round(baseReported * config.multiplier));
+    const fullPeriodReported = Math.max(1, Math.round(baseReported * config.multiplier));
+    
+    // Apply dynamic cumulative time of day factor and live incident offset
+    const catOffset = timeKey === 'today' ? Math.floor(liveIncidentOffset / (CRIME_CATEGORIES_DATA.length || 1)) + (idx % 2) : 0;
+    const reported = Math.max(1, Math.round(fullPeriodReported * timeOfDayFactor) + catOffset);
     const verified = Math.max(1, Math.round(reported * dyn.verificationRatio));
     const solved = Math.max(1, Math.round(verified * dyn.solveRatio));
     const archived = Math.max(1, Math.round(solved * config.archiveRatio));

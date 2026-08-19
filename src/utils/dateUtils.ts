@@ -59,17 +59,23 @@ export function sortArticlesByLatest(articles: NewsArticle[]): NewsArticle[] {
 /**
  * Parses article date into a standard Date object
  */
-export function getArticleDate(article: NewsArticle, referenceDateStr: string = '2026-08-15'): Date {
+export function getArticleDate(article: NewsArticle, referenceDateStr?: string): Date {
+  const now = new Date();
+  const ref = referenceDateStr ? new Date(referenceDateStr) : now;
+
+  if (article.publishedTimestamp && article.publishedTimestamp > 0) {
+    return new Date(article.publishedTimestamp);
+  }
+
   if (article.publishedDate) {
     const parts = article.publishedDate.split('-');
     if (parts.length === 3) {
-      return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
     }
   }
 
   // Fallback parsing from publishedAt relative text
   const pub = (article.publishedAt || '').toLowerCase();
-  const ref = new Date(referenceDateStr);
 
   if (pub.includes('min') || pub.includes('hour') || pub.includes('today') || pub.includes('just now')) {
     return ref;
@@ -137,14 +143,24 @@ export function isArticleInTimeRange(
   timeKey: TimeRangeKey | string = 'ytd',
   customStartDate?: string,
   customEndDate?: string,
-  referenceDateStr: string = '2026-08-15'
+  referenceDateStr?: string
 ): boolean {
+  const now = new Date();
+  const ref = referenceDateStr ? new Date(referenceDateStr) : now;
   const articleDate = getArticleDate(article, referenceDateStr);
-  const ref = new Date(referenceDateStr);
+
+  const pub = (article.publishedAt || '').toLowerCase();
+  const isRecentOrLive = 
+    article.isBreaking ||
+    pub.includes('min') || 
+    pub.includes('hour') || 
+    pub.includes('just now') || 
+    pub.includes('today') ||
+    (article.publishedTimestamp && (Date.now() - article.publishedTimestamp) < 24 * 60 * 60 * 1000);
 
   switch (timeKey) {
     case 'today': {
-      // Must be same day as referenceDate
+      if (isRecentOrLive) return true;
       const sameYear = articleDate.getFullYear() === ref.getFullYear();
       const sameMonth = articleDate.getMonth() === ref.getMonth();
       const sameDate = articleDate.getDate() === ref.getDate();
@@ -152,6 +168,7 @@ export function isArticleInTimeRange(
     }
 
     case '7d': {
+      if (isRecentOrLive) return true;
       const sevenDaysAgo = new Date(ref);
       sevenDaysAgo.setDate(ref.getDate() - 7);
       sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -161,6 +178,7 @@ export function isArticleInTimeRange(
     }
 
     case '30d': {
+      if (isRecentOrLive) return true;
       const thirtyDaysAgo = new Date(ref);
       thirtyDaysAgo.setDate(ref.getDate() - 30);
       thirtyDaysAgo.setHours(0, 0, 0, 0);
@@ -170,6 +188,7 @@ export function isArticleInTimeRange(
     }
 
     case 'ytd': {
+      if (isRecentOrLive) return true;
       const startOfYear = new Date(ref.getFullYear(), 0, 1);
       const endOfYear = new Date(ref.getFullYear(), 11, 31, 23, 59, 59);
       return articleDate >= startOfYear && articleDate <= endOfYear;

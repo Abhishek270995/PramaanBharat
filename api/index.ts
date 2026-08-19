@@ -15,7 +15,7 @@ interface CacheEntry {
 }
 const cacheStore = new Map<string, CacheEntry>();
 const CACHE_TTL_DEFAULT_MS = 15 * 60 * 1000; // 15 minutes default
-const CACHE_TTL_WIRE_MS = 60 * 1000; // 60 seconds for live wire feeds
+const CACHE_TTL_WIRE_MS = 15 * 1000; // 15 seconds for live wire feeds
 
 const getFromCache = (key: string, maxTtlMs: number = CACHE_TTL_DEFAULT_MS) => {
   const item = cacheStore.get(key);
@@ -587,7 +587,7 @@ async function fetchRssWireArticles(options: {
 // API: Pure Real-Time RSS Live Wire Endpoint (Instant, Zero Quota Dependency)
 app.get("/api/news/live-wire", async (req, res) => {
   try {
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     const { category, state, count = 8, searchQuery } = req.query;
     const cacheKey = `rsswire:${category || 'all'}:${state || 'all'}:${encodeURIComponent((searchQuery as string) || '')}`;
 
@@ -619,7 +619,7 @@ app.get("/api/news/live-wire", async (req, res) => {
 
 app.post("/api/news/live-wire", async (req, res) => {
   try {
-    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     const { category, state, count = 8, searchQuery } = req.body;
     const cacheKey = `rsswire:${category || 'all'}:${state || 'all'}:${encodeURIComponent((searchQuery as string) || '')}`;
 
