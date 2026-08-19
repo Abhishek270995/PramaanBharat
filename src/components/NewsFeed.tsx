@@ -464,6 +464,43 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
         </div>
       )}
 
+      {/* Real-time Live Wire Streaming Network Bar */}
+      {!isBookmarksView && (
+        <div className="mb-3 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-slate-50 border border-blue-200/80 flex items-center justify-between flex-wrap gap-2 text-xs shadow-2xs">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="font-bold text-slate-800 flex items-center gap-1">
+              <Radio className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+              Live Wire Stream: Connected
+            </span>
+            <span className="text-slate-500 text-[11px] hidden md:inline">
+              (The Hindu • Google News India • PIB • PTI • DD News)
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2.5 text-[11px] text-slate-600">
+            <span className="flex items-center gap-1 bg-white/90 px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
+              <Clock className="w-3 h-3 text-blue-500" />
+              <span>Auto-syncing every 60s</span>
+            </span>
+            {onFetchLiveNews && (
+              <button
+                onClick={() => onFetchLiveNews(activeCategory, selectedState?.name)}
+                disabled={isFetchingLiveNews}
+                className="text-blue-700 font-bold hover:text-blue-900 cursor-pointer flex items-center gap-1 hover:underline disabled:opacity-50"
+                title="Fetch latest real-time wire stories immediately"
+              >
+                <RefreshCw className={`w-3 h-3 ${isFetchingLiveNews ? 'animate-spin text-blue-600' : ''}`} />
+                <span>{isFetchingLiveNews ? 'Syncing...' : 'Sync Wire Now'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Genuine Verified Sources Quick Filter Row */}
       {!isBookmarksView && (
         <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-4 mb-4 text-xs border-b border-slate-100">
