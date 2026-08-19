@@ -52,6 +52,9 @@ interface NewsFeedProps {
   onClearFilters: () => void;
   onFetchLiveNews?: (category?: NewsCategory, state?: string) => Promise<void>;
   isFetchingLiveNews?: boolean;
+  lastSyncTimestamp?: number;
+  onManualWireSync?: () => Promise<void> | void;
+  isSyncingWire?: boolean;
 }
 
 export const NewsFeed: React.FC<NewsFeedProps> = ({
@@ -75,7 +78,10 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
   isBookmarksView,
   onClearFilters,
   onFetchLiveNews,
-  isFetchingLiveNews = false
+  isFetchingLiveNews = false,
+  lastSyncTimestamp,
+  onManualWireSync,
+  isSyncingWire = false
 }) => {
   const [selectedSourceFilter, setSelectedSourceFilter] = useState<string>('All');
   const [selectedTierFilter, setSelectedTierFilter] = useState<string>('All');
@@ -85,18 +91,21 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
   
   // Track elapsed time with fresh session start so visits and refreshes start clean without stale multi-day anchor drift
   const [elapsedMinutes, setElapsedMinutes] = useState<number>(0);
+  const [nowTimestamp, setNowTimestamp] = useState<number>(Date.now());
 
-  // Live timer heartbeat every 15 seconds to update relative time across the page dynamically
+  // Live timer heartbeat every 1 second to power real-time "Last updated: Xs ago • Next sync in: Ys" ticker
   useEffect(() => {
     sessionStorage.removeItem('pramaan_session_anchor_time');
     const startTime = Date.now();
 
     const updateElapsed = () => {
-      const diff = Math.max(0, Math.floor((Date.now() - startTime) / 60000));
+      const current = Date.now();
+      setNowTimestamp(current);
+      const diff = Math.max(0, Math.floor((current - startTime) / 60000));
       setElapsedMinutes(diff);
     };
 
-    const timer = setInterval(updateElapsed, 15000);
+    const timer = setInterval(updateElapsed, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -287,6 +296,10 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
     setSelectedTierFilter('All');
     onClearFilters();
   };
+  const syncAnchor = lastSyncTimestamp || nowTimestamp;
+  const secondsSinceSync = Math.max(0, Math.floor((nowTimestamp - syncAnchor) / 1000));
+  const nextSyncInSeconds = Math.max(0, 90 - (secondsSinceSync % 90));
+  const syncDisplay = secondsSinceSync < 4 ? 'Just now' : `${secondsSinceSync}s ago`;
 
   return (
     <section className="my-8" id="news-feed-section">
@@ -307,35 +320,36 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
                   {activeCategory === 'For You' ? 'Your Personalized Briefing' :
                    activeCategory === 'Public Safety & Crime' ? 'Police & Public Safety Bulletins' :
                    activeCategory === 'State & Local' ? (selectedState ? `${selectedState.name} Local Desk` : 'Regional State News') :
-                   activeCategory === 'All' ? 'Top Stories & Verified Indian Coverage' :
-                   `${activeCategory} Coverage`}
+                   activeCategory === 'National' ? 'National Broadsheet & Statutory Desks' :
+                   activeCategory === 'Business' ? 'Economy, Markets & Corporate Safety' :
+                   activeCategory === 'Tech' ? 'Technology, Cyber & AI Security' :
+                   activeCategory === 'Politics' ? 'Governance, Parliament & Civic Policy' :
+                   activeCategory === 'Health & Climate' ? 'Public Health & Meteorological Bureau' :
+                   'Verified Indian News Bulletins'}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 font-bold text-xs">
-                  {filtered.length} {filtered.length === 1 ? 'Article' : 'Articles'}
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                  {filtered.length} {filtered.length === 1 ? 'article' : 'articles'}
                 </span>
                 
-                {/* Active Timeframe Badge */}
-                {timeKey !== 'ytd' && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-semibold">
-                    <Calendar className="w-3 h-3 text-amber-600" />
-                    <span>{timeLabel}</span>
-                    {onChangeTimeKey && (
-                      <button 
-                        onClick={() => onChangeTimeKey('ytd')}
-                        className="hover:text-amber-950 ml-0.5 cursor-pointer"
-                        title="Reset time filter to 2026 YTD"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    )}
+                {/* Active Filter Tags */}
+                {selectedState && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-900 text-white text-[11px] font-semibold">
+                    <MapPin className="w-3 h-3 text-blue-400" />
+                    <span>{selectedDistrict ? `${selectedDistrict.name}, ${selectedState.name}` : selectedState.name}</span>
+                    <button 
+                      onClick={() => onSelectCategory('All')} 
+                      className="hover:text-rose-300 ml-0.5 cursor-pointer"
+                      title="Clear location filter"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </span>
                 )}
 
                 {/* Source Filter Badge */}
                 {selectedSourceFilter !== 'All' && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-[11px] font-semibold">
-                    <ShieldCheck className="w-3 h-3 text-blue-600" />
-                    <span>Source: {selectedSourceFilter}</span>
+                    <span>{selectedSourceFilter}</span>
                     <button 
                       onClick={() => setSelectedSourceFilter('All')}
                       className="hover:text-blue-950 ml-0.5 cursor-pointer"
@@ -453,7 +467,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
         </div>
       )}
 
-      {/* Real-time Live Wire Streaming Network Bar */}
+      {/* Real-time Live Wire Streaming Network Bar with Live 90s Countdown Indicator */}
       {!isBookmarksView && (
         <div className="mb-3 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-slate-50 border border-blue-200/80 flex items-center justify-between flex-wrap gap-2 text-xs shadow-2xs">
           <div className="flex items-center gap-2">
@@ -463,7 +477,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
             </span>
             <span className="font-bold text-slate-800 flex items-center gap-1">
               <Radio className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
-              Live Wire Stream: Connected
+              Live Wire Stream: Active (90s Loop)
             </span>
             <span className="text-slate-500 text-[11px] hidden md:inline">
               (The Hindu • Google News India • PIB • PTI • DD News)
@@ -471,21 +485,26 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
           </div>
 
           <div className="flex items-center gap-2.5 text-[11px] text-slate-600">
-            <span className="flex items-center gap-1 bg-white/90 px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
+            <span className="flex items-center gap-1.5 bg-white/90 px-2.5 py-0.5 rounded-md border border-slate-200 shadow-2xs font-mono text-[11px]">
               <Clock className="w-3 h-3 text-blue-500" />
-              <span>Auto-syncing every 60s</span>
+              <span>Updated: <strong className="text-slate-900 font-bold">{syncDisplay}</strong> • Next sync in: <strong className="text-blue-600 font-bold">{nextSyncInSeconds}s</strong></span>
             </span>
-            {onFetchLiveNews && (
-              <button
-                onClick={() => onFetchLiveNews(activeCategory, selectedState?.name)}
-                disabled={isFetchingLiveNews}
-                className="text-blue-700 font-bold hover:text-blue-900 cursor-pointer flex items-center gap-1 hover:underline disabled:opacity-50"
-                title="Fetch latest real-time wire stories immediately"
-              >
-                <RefreshCw className={`w-3 h-3 ${isFetchingLiveNews ? 'animate-spin text-blue-600' : ''}`} />
-                <span>{isFetchingLiveNews ? 'Syncing...' : 'Sync Wire Now'}</span>
-              </button>
-            )}
+            
+            <button
+              onClick={() => {
+                if (onManualWireSync) {
+                  onManualWireSync();
+                } else if (onFetchLiveNews) {
+                  onFetchLiveNews(activeCategory, selectedState?.name);
+                }
+              }}
+              disabled={isFetchingLiveNews || isSyncingWire}
+              className="text-blue-700 font-bold hover:text-blue-900 cursor-pointer flex items-center gap-1 hover:underline disabled:opacity-50"
+              title="Fetch latest real-time wire stories immediately"
+            >
+              <RefreshCw className={`w-3 h-3 ${isFetchingLiveNews || isSyncingWire ? 'animate-spin text-blue-600' : ''}`} />
+              <span>{isFetchingLiveNews || isSyncingWire ? 'Syncing...' : 'Sync Wire Now'}</span>
+            </button>
           </div>
         </div>
       )}

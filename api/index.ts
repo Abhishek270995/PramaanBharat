@@ -8,18 +8,19 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(express.json());
 
-// --- IN-MEMORY CACHE (TTL 30 mins) ---
+// --- IN-MEMORY CACHE (Customizable TTL) ---
 interface CacheEntry {
   data: any;
   timestamp: number;
 }
 const cacheStore = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const CACHE_TTL_DEFAULT_MS = 15 * 60 * 1000; // 15 minutes default
+const CACHE_TTL_WIRE_MS = 60 * 1000; // 60 seconds for live wire feeds
 
-const getFromCache = (key: string) => {
+const getFromCache = (key: string, maxTtlMs: number = CACHE_TTL_DEFAULT_MS) => {
   const item = cacheStore.get(key);
   if (!item) return null;
-  if (Date.now() - item.timestamp > CACHE_TTL_MS) {
+  if (Date.now() - item.timestamp > maxTtlMs) {
     cacheStore.delete(key);
     return null;
   }
@@ -586,10 +587,11 @@ async function fetchRssWireArticles(options: {
 // API: Pure Real-Time RSS Live Wire Endpoint (Instant, Zero Quota Dependency)
 app.get("/api/news/live-wire", async (req, res) => {
   try {
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30');
     const { category, state, count = 8, searchQuery } = req.query;
     const cacheKey = `rsswire:${category || 'all'}:${state || 'all'}:${encodeURIComponent((searchQuery as string) || '')}`;
 
-    const cached = getFromCache(cacheKey);
+    const cached = getFromCache(cacheKey, CACHE_TTL_WIRE_MS);
     if (cached) {
       return res.json(cached);
     }
@@ -617,10 +619,11 @@ app.get("/api/news/live-wire", async (req, res) => {
 
 app.post("/api/news/live-wire", async (req, res) => {
   try {
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30');
     const { category, state, count = 8, searchQuery } = req.body;
     const cacheKey = `rsswire:${category || 'all'}:${state || 'all'}:${encodeURIComponent((searchQuery as string) || '')}`;
 
-    const cached = getFromCache(cacheKey);
+    const cached = getFromCache(cacheKey, CACHE_TTL_WIRE_MS);
     if (cached) {
       return res.json(cached);
     }

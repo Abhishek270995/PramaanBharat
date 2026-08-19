@@ -265,16 +265,22 @@ export default function App() {
     window.scrollTo({ top: 180, behavior: 'smooth' });
   };
 
-  // Real-time Live RSS Wire Fetcher (Backend + Direct Browser Fallback)
+  // Track last live wire synchronization timestamp
+  const [lastSyncTime, setLastSyncTime] = useState<number>(Date.now());
+  const [isSyncingWire, setIsSyncingWire] = useState<boolean>(false);
+
+  // Real-time Live RSS Wire Fetcher (Backend with Cache-Control + Cache-Busted Browser Fallback)
   const fetchLiveWireNews = async (category?: NewsCategory, state?: string) => {
     const targetCat = category || activeCategory;
     const targetState = state || selectedState?.name;
+    setIsSyncingWire(true);
 
     try {
-      // 1. Try Backend Live Wire Endpoint First
-      const res = await fetch('/api/news/live-wire', {
+      // 1. Try Backend Live Wire Endpoint First (with Cache-Control headers)
+      const res = await fetch(`/api/news/live-wire?_=${Date.now()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
         body: JSON.stringify({
           category: targetCat === 'All' ? 'National' : targetCat,
           state: targetState,
@@ -293,6 +299,8 @@ export default function App() {
             }
             return prev;
           });
+          setLastSyncTime(Date.now());
+          setIsSyncingWire(false);
           return;
         }
       }
@@ -300,13 +308,13 @@ export default function App() {
       console.warn('Backend wire fetch fallback notice:', backendErr);
     }
 
-    // 2. Direct Browser-side RSS Wire Feed (CORS-friendly public fallback)
+    // 2. Direct Browser-side RSS Wire Feed with Explicit Cache-Busting (CORS-friendly public fallback)
     try {
       const topicQuery = targetState ? encodeURIComponent(`${targetState} India`) : targetCat === 'Business' ? 'BUSINESS' : targetCat === 'Tech' ? 'TECHNOLOGY' : 'NATION';
       const targetRss = `https://news.google.com/rss/headlines/section/topic/${topicQuery}?hl=en-IN&gl=IN&ceid=IN:en`;
-      const fallbackUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(targetRss)}`;
+      const fallbackUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(targetRss)}&_=${Date.now()}`;
 
-      const browserRes = await fetch(fallbackUrl);
+      const browserRes = await fetch(fallbackUrl, { cache: 'no-store' });
       if (browserRes.ok) {
         const json = await browserRes.json();
         if (json.status === 'ok' && Array.isArray(json.items) && json.items.length > 0) {
@@ -357,25 +365,28 @@ export default function App() {
             }
             return prev;
           });
+          setLastSyncTime(Date.now());
         }
       }
     } catch (browserErr) {
       console.warn('Browser wire fetch notice:', browserErr);
+    } finally {
+      setIsSyncingWire(false);
     }
   };
 
-  // Initial load and periodic 60-second background wire sync
+  // Root Cause 1 Resolution: Proactive 90-second scheduled background polling loop
   useEffect(() => {
     // Initial fetch of live wire news on application startup
     fetchLiveWireNews();
 
-    // Periodic background wire sync every 60 seconds (1 minute)
+    // Proactive background wire refetch every 90 seconds (90,000 ms)
     const wireInterval = setInterval(() => {
       fetchLiveWireNews();
-    }, 60 * 1000);
+    }, 90 * 1000);
 
     return () => clearInterval(wireInterval);
-  }, [activeCategory, selectedState]);
+  }, [activeCategory, selectedState?.name]);
 
   const handleFetchLiveNews = async (category?: NewsCategory, state?: string) => {
     const creditCheck = consumeAiCredit();
@@ -388,12 +399,13 @@ export default function App() {
     try {
       const targetCat = category || activeCategory;
       const targetState = state || selectedState?.name;
-      const res = await fetch('/api/gemini/live-news', {
+      const res = await fetch(`/api/gemini/live-news?_=${Date.now()}`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'x-pro-token': subscription.authToken || ''
         },
+        cache: 'no-store',
         body: JSON.stringify({
           category: targetCat === 'All' ? 'National' : targetCat,
           state: targetState,
@@ -422,6 +434,7 @@ export default function App() {
           }
           return prev;
         });
+        setLastSyncTime(Date.now());
       }
     } catch (err) {
       console.error('Error fetching live news:', err);
@@ -612,6 +625,9 @@ export default function App() {
               onClearFilters={handleResetFilters}
               onFetchLiveNews={handleFetchLiveNews}
               isFetchingLiveNews={isFetchingLiveNews}
+              lastSyncTimestamp={lastSyncTime}
+              onManualWireSync={() => fetchLiveWireNews(activeCategory, selectedState?.name)}
+              isSyncingWire={isSyncingWire}
             />
 
             {/* 5. Trending Citizen Safety Concerns */}
@@ -654,6 +670,9 @@ export default function App() {
               onClearFilters={handleResetFilters}
               onFetchLiveNews={handleFetchLiveNews}
               isFetchingLiveNews={isFetchingLiveNews}
+              lastSyncTimestamp={lastSyncTime}
+              onManualWireSync={() => fetchLiveWireNews(activeCategory, selectedState?.name)}
+              isSyncingWire={isSyncingWire}
             />
           </div>
         )}
