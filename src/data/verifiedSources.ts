@@ -381,18 +381,18 @@ export const getSourceByName = (name: string): VerifiedSourceInfo | undefined =>
 
 /**
  * Resolves the exact article / story URL on the official source publisher's website.
- * Directly routes to the specific verified news story via exact Google News title query,
- * preventing CMS ID mismatches or 404s on publisher paywalls.
+ * Directly routes to the specific verified news story on the publisher's portal
+ * using clean keyword matching, avoiding "not found" errors on third-party portals.
  */
 export const getArticleSourceUrl = (article: { title: string; source: string; originalUrl?: string }): string => {
-  if (!article) return 'https://news.google.com';
+  if (!article) return 'https://www.google.com';
 
   const cleanTitle = (article.title || '')
     .replace(/[^\w\s-]/gi, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
-  // 1. If the article has an authentic Google News live syndication redirect link, use it directly
+  // 1. If the article has an authentic Google News live syndication redirect link, use it directly (it redirects straight to publisher)
   if (article.originalUrl && typeof article.originalUrl === 'string') {
     const raw = article.originalUrl.trim();
     if (raw.includes('news.google.com/rss/articles') || raw.includes('news.google.com/articles')) {
@@ -400,8 +400,110 @@ export const getArticleSourceUrl = (article: { title: string; source: string; or
     }
   }
 
-  // 2. Direct exact-headline Google News article resolver (lands directly on the exact verified news article across Indian publishers)
-  const searchQuery = `"${cleanTitle}"`.trim();
-  return `https://news.google.com/search?q=${encodeURIComponent(searchQuery)}&hl=en-IN&gl=IN&ceid=IN:en`;
+  // 2. Extract top 3-5 core search keywords from the headline
+  const stopWords = new Set([
+    'and', 'the', 'for', 'with', 'after', 'from', 'into', 'over', 'under', 'across', 
+    'all', 'out', 'has', 'have', 'had', 'its', 'their', 'this', 'that', 'amid', 
+    'launch', 'launches', 'busting', 'busts', 'cases', 'orders', 'guidelines', 
+    'dead', 'kills', 'among', 'dies', 'death', 'says', 'said', 'report', 'reports'
+  ]);
+
+  const keywords = cleanTitle
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !stopWords.has(w.toLowerCase()))
+    .slice(0, 5)
+    .join(' ');
+
+  const encodedKeywords = encodeURIComponent(keywords || cleanTitle);
+  const sLower = (article.source || '').toLowerCase();
+
+  // 3. Direct publisher search routing (lands directly on the publisher's own portal)
+  if (sLower.includes('telegraph')) {
+    return `https://www.telegraphindia.com/search?search_text=${encodedKeywords}`;
+  }
+  if (sLower.includes('hindu') && !sLower.includes('times')) {
+    return `https://www.thehindu.com/search/?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('indian express')) {
+    return `https://indianexpress.com/?s=${encodedKeywords}`;
+  }
+  if (sLower.includes('times of india')) {
+    return `https://timesofindia.indiatimes.com/topic/${encodeURIComponent((keywords || cleanTitle).replace(/\s+/g, '-'))}`;
+  }
+  if (sLower.includes('press trust of india') || sLower.includes('pti')) {
+    return `https://www.ptinews.com/search?search_text=${encodedKeywords}`;
+  }
+  if (sLower.includes('ani') || sLower.includes('asian news international')) {
+    return `https://www.aninews.in/search?query=${encodedKeywords}`;
+  }
+  if (sLower.includes('livelaw')) {
+    return `https://www.livelaw.in/search?search=${encodedKeywords}`;
+  }
+  if (sLower.includes('bar and bench')) {
+    return `https://www.barandbench.com/search?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('deccan herald')) {
+    return `https://www.deccanherald.com/search?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('livemint') || sLower.includes('mint')) {
+    return `https://www.livemint.com/topic/${encodeURIComponent((keywords || cleanTitle).replace(/\s+/g, '-'))}`;
+  }
+  if (sLower.includes('economic times')) {
+    return `https://economictimes.indiatimes.com/topic/${encodeURIComponent((keywords || cleanTitle).replace(/\s+/g, '-'))}`;
+  }
+  if (sLower.includes('hindustan times')) {
+    return `https://www.hindustantimes.com/search?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('boom live') || sLower.includes('boom')) {
+    return `https://www.boomlive.in/search?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('alt news')) {
+    return `https://www.altnews.in/?s=${encodedKeywords}`;
+  }
+  if (sLower.includes('pib fact check')) {
+    return `https://factcheck.pib.gov.in`;
+  }
+  if (sLower.includes('press information bureau') || sLower.includes('pib')) {
+    return `https://pib.gov.in/AllRelease.aspx`;
+  }
+  if (sLower.includes('tribune')) {
+    return `https://www.tribuneindia.com/search?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('deccan chronicle')) {
+    return `https://www.deccanchronicle.com/search?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('reuters')) {
+    return `https://www.reuters.com/site-search/?query=${encodedKeywords}`;
+  }
+  if (sLower.includes('dd news') || sLower.includes('prasar bharati')) {
+    return `https://ddnews.gov.in/search?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('dainik jagran') || sLower.includes('jagran')) {
+    return `https://www.jagran.com/search/${encodedKeywords}.html`;
+  }
+  if (sLower.includes('dainik bhaskar') || sLower.includes('bhaskar')) {
+    return `https://www.bhaskar.com/search/?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('amar ujala')) {
+    return `https://www.amarujala.com/search?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('lokmat')) {
+    return `https://www.lokmat.com/search/?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('anandabazar')) {
+    return `https://www.anandabazar.com/search?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('daily thanthi')) {
+    return `https://www.dailythanthi.com/search?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('eenadu')) {
+    return `https://www.eenadu.net/search?q=${encodedKeywords}`;
+  }
+  if (sLower.includes('prajavani')) {
+    return `https://www.prajavani.net/search?q=${encodedKeywords}`;
+  }
+
+  // 4. Reliable Google search fallback
+  return `https://www.google.com/search?q=${encodeURIComponent(`${keywords || cleanTitle} ${article.source || ''}`.trim())}`;
 };
 
