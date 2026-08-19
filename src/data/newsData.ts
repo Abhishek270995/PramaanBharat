@@ -347,7 +347,7 @@ Tracking telemetry stations along the eastern seaboard and naval vessels in the 
 
 The successful demonstration places India among an elite group of nations possessing operational hypersonic atmospheric glide technology for strategic deterrence.`,
     source: 'Press Trust of India (PTI)',
-    originalUrl: 'https://ptinews.com',
+    originalUrl: 'https://www.ptinews.com/search?search_text=drdo+hypersonic+missile+odisha',
     publishedAt: '12 hours ago',
     category: 'National',
     stateId: 'odisha',
@@ -860,7 +860,7 @@ The guidelines mandate cool reflective paint coatings on municipal school roofs,
 
 Hospitals have designated air-conditioned heat-stroke recovery wards equipped with rapid ice immersion tubs and IV electrolytes.`,
     source: 'Press Trust of India (PTI)',
-    originalUrl: 'https://ptinews.com',
+    originalUrl: 'https://www.ptinews.com/search?search_text=ndma+heat+action+plan',
     publishedAt: '15 hours ago',
     category: 'Health & Climate',
     stateId: 'delhi-ncr',
@@ -1300,7 +1300,7 @@ Key citizen-centric reforms include mandatory Zero FIR registration at any polic
 
 Judicial bodies across all high courts have reported noticeable streamlining in chargesheet filings and bail hearing schedules.`,
     source: 'Press Trust of India (PTI)',
-    originalUrl: 'https://ptinews.com',
+    originalUrl: 'https://www.ptinews.com/search?search_text=bharatiya+nyaya+sanhita+bns',
     publishedAt: 'July 1, 2025',
     publishedDate: '2025-07-01',
     category: 'Public Safety & Crime',
@@ -1379,7 +1379,7 @@ The milestone was anchored by the partial energization of the world’s largest 
 
 The renewable capacity offset an estimated 280 million tonnes of carbon dioxide emissions while supplying round-the-clock green power to industrial manufacturing hubs.`,
     source: 'Press Trust of India (PTI)',
-    originalUrl: 'https://ptinews.com',
+    originalUrl: 'https://www.ptinews.com/search?search_text=khavda+solar+park+gujarat',
     publishedAt: 'October 24, 2025',
     publishedDate: '2025-10-24',
     category: 'Health & Climate',

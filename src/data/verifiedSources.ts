@@ -42,7 +42,7 @@ export const VERIFIED_SOURCES_CATALOG: VerifiedSourceInfo[] = [
     headquarters: 'New Delhi',
     language: 'English & Hindi (Bhasha)',
     badgeColor: 'bg-blue-600 text-white',
-    website: 'ptinews.com'
+    website: 'www.ptinews.com'
   },
   {
     id: 'ani',
@@ -390,6 +390,18 @@ export const getArticleSourceUrl = (article: { title: string; source: string; or
   const cleanTitle = (article.title || '')
     .replace(/[^\w\s-]/gi, ' ')
     .trim();
+
+  // If the article has an explicit, specific deep-link originalUrl (not a naked domain), use it directly
+  if (article.originalUrl && typeof article.originalUrl === 'string') {
+    const raw = article.originalUrl.trim();
+    if (raw.startsWith('http')) {
+      // Check if it is a specific article URL (has path beyond domain)
+      const isNakedDomain = /^https?:\/\/[^\/]+\/?$/i.test(raw);
+      if (!isNakedDomain && !raw.includes('news.google.com') && !raw.endsWith('/')) {
+        return raw;
+      }
+    }
+  }
 
   // Extract core keywords from the headline
   const stopWords = new Set(['and', 'the', 'for', 'with', 'after', 'from', 'into', 'over', 'under', 'across', 'all', 'out', 'has', 'have', 'had', 'its', 'their', 'this', 'that', 'with', 'amid', 'launch', 'launches', 'busting', 'busts']);
