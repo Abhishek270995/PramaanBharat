@@ -582,21 +582,21 @@ export const TIMEFRAME_CONFIGS: Record<TimeRangeKey, TimeframeMetricsConfig> = {
     chargesheetSpeed: 'Avg 12 Days'
   },
   ytd: {
-    multiplier: 0.65,
-    verificationRatio: 0.938, // 93.8% verified (2026 YTD)
-    solveRatio: 0.884,
-    archiveRatio: 0.862,
-    yoyTrend: -3.8,
-    yoyLabel: '-3.8% YoY',
+    multiplier: 0.654,        // ~65.4% of annual year completed by Aug 19
+    verificationRatio: 0.942, // 94.2% verified
+    solveRatio: 0.884,        // 88.4% solve rate
+    archiveRatio: 0.856,      // 85.6% archived
+    yoyTrend: -3.2,           // -3.2% YoY crime reduction
+    yoyLabel: '-3.2% YoY',
     isDeclinePositive: true,
-    periodName: 'Year 2026 (YTD 8-Month Telemetry)',
-    comparisonWindow: 'vs 2025 Jan-Aug Baseline',
-    lawFramework: 'Bharatiya Nagarik Suraksha Sanhita (BNSS)',
+    periodName: 'Year 2026 (Jan 1 - Current)',
+    comparisonWindow: 'vs parallel 2025 YTD window',
+    lawFramework: 'Bharatiya Nyaya Sanhita (BNS)',
     chargesheetSpeed: 'Avg 14 Days'
   },
   '2025': {
-    multiplier: 1.038,        // Full year 2025 archive
-    verificationRatio: 0.914, // 91.4% verified (2025 Transition year)
+    multiplier: 1.032,        // Full year 2025 archive
+    verificationRatio: 0.925, // 92.5% verified
     solveRatio: 0.846,
     archiveRatio: 0.831,
     yoyTrend: -1.4,
@@ -658,24 +658,24 @@ const CATEGORY_TIME_METRICS: Record<string, Record<CrimeCategory, { yoyChange: n
     'Public Order & Nuisance': { yoyChange: -5.6, verificationRatio: 0.912, solveRatio: 0.922, avgDays: 5 }
   },
   '2024': {
-    'Cybercrime & Online Fraud': { yoyChange: 34.5, verificationRatio: 0.877, solveRatio: 0.764, avgDays: 29 },
-    'Theft & Burglary': { yoyChange: 5.2, verificationRatio: 0.907, solveRatio: 0.815, avgDays: 28 },
-    'Women & Child Safety': { yoyChange: 3.6, verificationRatio: 0.910, solveRatio: 0.856, avgDays: 16 },
-    'Financial & Corporate Fraud': { yoyChange: 24.0, verificationRatio: 0.896, solveRatio: 0.784, avgDays: 61 },
-    'Traffic & Hit-and-Run': { yoyChange: 4.1, verificationRatio: 0.901, solveRatio: 0.878, avgDays: 10 },
-    'Violent Offenses': { yoyChange: 1.2, verificationRatio: 0.922, solveRatio: 0.851, avgDays: 34 },
-    'Narcotics & NDPS': { yoyChange: 8.9, verificationRatio: 0.908, solveRatio: 0.849, avgDays: 45 },
-    'Public Order & Nuisance': { yoyChange: 7.4, verificationRatio: 0.893, solveRatio: 0.876, avgDays: 7 }
+    'Cybercrime & Online Fraud': { yoyChange: 32.4, verificationRatio: 0.872, solveRatio: 0.778, avgDays: 34 },
+    'Theft & Burglary': { yoyChange: 1.2, verificationRatio: 0.885, solveRatio: 0.812, avgDays: 29 },
+    'Women & Child Safety': { yoyChange: 3.5, verificationRatio: 0.894, solveRatio: 0.845, avgDays: 18 },
+    'Financial & Corporate Fraud': { yoyChange: 24.1, verificationRatio: 0.868, solveRatio: 0.760, avgDays: 68 },
+    'Traffic & Hit-and-Run': { yoyChange: 4.6, verificationRatio: 0.890, solveRatio: 0.852, avgDays: 12 },
+    'Violent Offenses': { yoyChange: 0.8, verificationRatio: 0.888, solveRatio: 0.835, avgDays: 36 },
+    'Narcotics & NDPS': { yoyChange: 8.9, verificationRatio: 0.882, solveRatio: 0.824, avgDays: 44 },
+    'Public Order & Nuisance': { yoyChange: 2.1, verificationRatio: 0.870, solveRatio: 0.880, avgDays: 8 }
   },
   '30d': {
     'Cybercrime & Online Fraud': { yoyChange: 14.2, verificationRatio: 0.952, solveRatio: 0.878, avgDays: 11 },
-    'Theft & Burglary': { yoyChange: -5.8, verificationRatio: 0.941, solveRatio: 0.884, avgDays: 16 },
-    'Women & Child Safety': { yoyChange: -6.1, verificationRatio: 0.965, solveRatio: 0.932, avgDays: 7 },
-    'Financial & Corporate Fraud': { yoyChange: 9.5, verificationRatio: 0.950, solveRatio: 0.852, avgDays: 39 },
-    'Traffic & Hit-and-Run': { yoyChange: -3.2, verificationRatio: 0.948, solveRatio: 0.938, avgDays: 5 },
-    'Violent Offenses': { yoyChange: -9.4, verificationRatio: 0.958, solveRatio: 0.912, avgDays: 20 },
-    'Narcotics & NDPS': { yoyChange: 18.0, verificationRatio: 0.951, solveRatio: 0.905, avgDays: 28 },
-    'Public Order & Nuisance': { yoyChange: -12.8, verificationRatio: 0.935, solveRatio: 0.960, avgDays: 3 }
+    'Theft & Burglary': { yoyChange: -5.8, verificationRatio: 0.944, solveRatio: 0.889, avgDays: 16 },
+    'Women & Child Safety': { yoyChange: -6.4, verificationRatio: 0.965, solveRatio: 0.932, avgDays: 7 },
+    'Financial & Corporate Fraud': { yoyChange: 9.4, verificationRatio: 0.950, solveRatio: 0.852, avgDays: 38 },
+    'Traffic & Hit-and-Run': { yoyChange: -3.6, verificationRatio: 0.948, solveRatio: 0.938, avgDays: 5 },
+    'Violent Offenses': { yoyChange: -9.5, verificationRatio: 0.956, solveRatio: 0.912, avgDays: 20 },
+    'Narcotics & NDPS': { yoyChange: 19.1, verificationRatio: 0.952, solveRatio: 0.906, avgDays: 28 },
+    'Public Order & Nuisance': { yoyChange: -12.8, verificationRatio: 0.935, solveRatio: 0.962, avgDays: 3 }
   },
   '7d': {
     'Cybercrime & Online Fraud': { yoyChange: 11.5, verificationRatio: 0.960, solveRatio: 0.890, avgDays: 9 },
@@ -775,15 +775,6 @@ export const getCategoryStatsForTimeframe = (
     locationFactor = selectedState.reportedCrimes / 368400;
   }
 
-  // Calculate dynamic time-of-day cumulative curve for 'today'
-  let timeOfDayFactor = 1.0;
-  if (timeKey === 'today') {
-    const now = new Date();
-    const minutesElapsedToday = now.getHours() * 60 + now.getMinutes();
-    // Daily curve: base 35% minimum at start of day up to 100% at end of day
-    timeOfDayFactor = Math.min(1.0, Math.max(0.35, 0.35 + (minutesElapsedToday / 1440) * 0.65));
-  }
-
   return CRIME_CATEGORIES_DATA.map((cat, idx) => {
     const dyn = metricsMap[cat.category] || {
       yoyChange: cat.yoyChange,
@@ -795,9 +786,9 @@ export const getCategoryStatsForTimeframe = (
     const baseReported = Math.max(1, Math.round(cat.reported * locationFactor));
     const fullPeriodReported = Math.max(1, Math.round(baseReported * config.multiplier));
     
-    // Apply dynamic cumulative time of day factor and live incident offset
+    // Apply live incident offset for real-time telemetry
     const catOffset = timeKey === 'today' ? Math.floor(liveIncidentOffset / (CRIME_CATEGORIES_DATA.length || 1)) + (idx % 2) : 0;
-    const reported = Math.max(1, Math.round(fullPeriodReported * timeOfDayFactor) + catOffset);
+    const reported = Math.max(1, fullPeriodReported + catOffset);
     const verified = Math.max(1, Math.round(reported * dyn.verificationRatio));
     const solved = Math.max(1, Math.round(verified * dyn.solveRatio));
     const archived = Math.max(1, Math.round(solved * config.archiveRatio));
