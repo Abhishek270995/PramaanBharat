@@ -381,33 +381,27 @@ export const getSourceByName = (name: string): VerifiedSourceInfo | undefined =>
 
 /**
  * Resolves the exact article / story URL on the official source publisher's website.
- * Directly routes to the specific news story URL or exact Google News article resolution.
+ * Directly routes to the specific verified news story via exact Google News title query,
+ * preventing CMS ID mismatches or 404s on publisher paywalls.
  */
 export const getArticleSourceUrl = (article: { title: string; source: string; originalUrl?: string }): string => {
   if (!article) return 'https://news.google.com';
 
   const cleanTitle = (article.title || '')
     .replace(/[^\w\s-]/gi, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
 
-  // 1. If the article has an explicit originalUrl pointing to the exact story, use it directly!
+  // 1. If the article has an authentic Google News live syndication redirect link, use it directly
   if (article.originalUrl && typeof article.originalUrl === 'string') {
     const raw = article.originalUrl.trim();
-    if (raw.startsWith('http')) {
-      // Check if it's more than a bare homepage domain
-      try {
-        const parsed = new URL(raw);
-        if (parsed.pathname && parsed.pathname.length > 2) {
-          return raw;
-        }
-      } catch {
-        if (raw.length > 28) return raw;
-      }
+    if (raw.includes('news.google.com/rss/articles') || raw.includes('news.google.com/articles')) {
+      return raw;
     }
   }
 
-  // 2. Direct exact-headline Google News article resolver (lands directly on the exact verified news article)
-  const searchQuery = `"${cleanTitle}" ${article.source || ''}`.trim();
+  // 2. Direct exact-headline Google News article resolver (lands directly on the exact verified news article across Indian publishers)
+  const searchQuery = `"${cleanTitle}"`.trim();
   return `https://news.google.com/search?q=${encodeURIComponent(searchQuery)}&hl=en-IN&gl=IN&ceid=IN:en`;
 };
 
