@@ -223,6 +223,7 @@ export interface CommunityTopic {
   policeStatus: 'Under Verification' | 'Police Patrol Assigned' | 'Ward Action Initiated' | 'Resolved by Community & Police';
   policeRemarks?: string;
   createdAt: string;
+  createdTimestamp?: number;
 }
 
 export interface AuthorizedOfficer {
