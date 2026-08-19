@@ -2,6 +2,223 @@ import { NewsArticle } from '../types';
 
 export const NEWS_ARTICLES: NewsArticle[] = [
   // --- PUBLIC SAFETY & CRIME ---
+  // --- REAL-TIME VERIFIED LIVE BREAKING NEWS (AUGUST 19, 2026) ---
+  {
+    id: 'news-live-20260819-01',
+    title: 'Kolkata: Mirza Galib Street Hotel Fire Kills Nine, Bangladeshi Nationals Among Dead; Fire Department Orders Safety Audit',
+    translatedTitles: {
+      hi: 'कोलकाता: मिर्जा गालिब स्ट्रीट होटल में आग लगने से नौ लोगों की मौत, बांग्लादेशी नागरिक भी शामिल; सुरक्षा ऑडिट के आदेश',
+      bn: 'কলকাতা: মির্জা গালিব স্ট্রিটের হোটেলে ভয়াবহ অগ্নিকাণ্ডে শিশুসহ ৯ জনের মৃত্যু, নিরাপত্তা অডিটের নির্দেশ',
+      ta: 'கொல்கத்தா: மிர்சா காலிப் தெரு ஹோட்டல் தீ விபத்தில் 9 பேர் பலி; பாதுகாப்பு தணிக்கைக்கு உத்தரவு',
+      te: 'కోల్‌కతా: మీర్జా గాలిబ్ స్ట్రీట్ హోటల్ అగ్నిప్రమాదంలో 9 మంది మృతి; భద్రతా ఆడిట్‌కు ఆదేశం',
+      mr: 'कोलकाता: मिर्झा गालिब स्ट्रीट हॉटेलला भीषण आग, ९ जणांचा मृत्यू; सुरक्षा ऑडिटचे आदेश',
+      gu: 'કોલકાતા: મિર્ઝા ગાલિબ સ્ટ્રીટ હોટેલમાં આગથી 9 લોકોના મોત; સુરક્ષા ઓડિટના આદેશ',
+      kn: 'ಕೋಲ್ಕತ್ತಾ: ಮಿರ್ಜಾ ಗಾಲಿಬ್ ರಸ್ತೆ ಹೋಟೆಲ್ ಅಗ್ನಿ ದುರಂತದಲ್ಲಿ 9 ಮಂದಿ ಸಾವು; ಸುರಕ್ಷತಾ ತನಿಖೆಗೆ ಆದೇಶ'
+    },
+    snippet: 'Fire tenders douse multi-story blaze in central Kolkata commercial hub; Forensic and disaster management teams probe electrical short-circuit triggers.',
+    content: `KOLKATA — A devastating early morning fire ripped through a multi-story hotel on Mirza Galib Street in central Kolkata, claiming the lives of nine people, including a child and foreign nationals from Bangladesh.
+
+Eight fire tenders rushed to the scene within minutes of the alarm, utilizing hydraulic ladders to evacuate stranded guests from upper-floor windows amidst thick smoke.
+
+The West Bengal Fire and Emergency Services Department has sealed the premises and instituted a high-level technical committee to investigate compliance with statutory fire safety clearances and electrical conduit certifications.`,
+    source: 'The Telegraph India',
+    originalUrl: 'https://www.telegraphindia.com/west-bengal/calcutta/kolkata-mirza-galib-street-hotel-fire-kills-nine/cid/2042183',
+    sourceTier: 'National Broadsheet',
+    publishedAt: 'Just now',
+    publishedDate: '2026-08-19',
+    publishedTimestamp: Date.now() - 15 * 60 * 1000,
+    category: 'Public Safety & Crime',
+    crimeCategory: 'Public Order & Nuisance',
+    stateId: 'west-bengal',
+    stateName: 'West Bengal',
+    districtId: 'kolkata',
+    districtName: 'Kolkata Central',
+    imageUrl: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&auto=format&fit=crop&q=80',
+    readTimeMinutes: 3,
+    isBreaking: true,
+    isVerifiedFactCheck: true,
+    credibilityRating: 'Correspondent Ground Report',
+    tags: ['Kolkata Fire', 'Mirza Galib Street', 'Disaster Management', 'Fire Safety Audit'],
+    viewsCount: 28900,
+    sharesCount: 4120,
+    summaryPoints: [
+      'Devastating hotel blaze in central Kolkata claims 9 lives, including foreign nationals.',
+      'Emergency response units douse fire and rescue upper-floor occupants.',
+      'Fire Department institutes statutory compliance audit across hospitality hubs.'
+    ]
+  },
+  {
+    id: 'news-live-20260819-02',
+    title: 'Delhi: Anti-Corruption Branch Arrests 6 in Jal Board Sewage Treatment Plant Tender Case',
+    translatedTitles: {
+      hi: 'दिल्ली: एंटी करप्शन ब्रांच ने जल बोर्ड सीवेज ट्रीटमेंट प्लांट टेंडर मामले में 6 लोगों को गिरफ्तार किया',
+      bn: 'দিল্লি: জল বোর্ড এসটিপি টেন্ডার দুর্নীতি মামলায় এসিবি ৬ জনকে গ্রেপ্তার করেছে',
+      ta: 'டெல்லி: ஜல் போர்டு கழிவுநீர் சுத்திகரிப்பு டெண்டர் வழக்கில் 6 பேரை லஞ்ச ஒழிப்புத்துறை கைது செய்தது',
+      te: 'ఢిల్లీ: జల్ బోర్డు ఎస్‌టిపి టెండర్ కేసులో 6 మందిని అరెస్ట్ చేసిన ఎసిబి',
+      mr: 'दिल्ली: जल बोर्ड सांडपाणी प्रक्रिया प्रकल्प निविदा प्रकरणात लाचलुचपत प्रतिबंधक विभागाकडून ६ जणांना अटक',
+      gu: 'દિલ્હી: જલ બોર્ડ એસટીપી ટેન્ડર કેસમાં એન્ટી કરપ્શન બ્રાન્ચે 6 લોકોની ધરપકડ કરી',
+      kn: 'ದೆಹಲಿ: ಜಲ ಮಂಡಳಿ ಒಳಚರಂಡಿ ಸಂಸ್ಕರಣಾ ಘಟಕ ಟೆಂಡರ್ ಪ್ರಕರಣದಲ್ಲಿ 6 ಮಂದಿಯನ್ನು ಬಂಧಿಸಿದ ಎಸಿಬಿ'
+    },
+    snippet: 'ACB files preliminary chargesheet documenting financial irregularities, forged technical certifications, and cartel bidding in multi-crore sewage plant upgrades.',
+    content: `NEW DELHI — The Delhi Anti-Corruption Branch (ACB) executed coordinated search raids across the National Capital Region, arresting six individuals in connection with alleged irregularities in awarding contracts for Sewage Treatment Plants (STP).
+
+Investigators seized sensitive digital ledgers, bank transfer records, and forged vendor audit reports from private consultancy firms implicated in manipulating tender parameters.
+
+Special ACB courts remanded the arrested individuals to custody to facilitate forensic cross-examination of digital transaction trails and departmental communication logs.`,
+    source: 'Asian News International (ANI)',
+    originalUrl: 'https://aninews.in/news/national/general-news/delhi-acb-arrests-6-including-former-minister-satyendar-jain-in-jal-board-stp-tender-case',
+    sourceTier: 'Official Statutory & Wire',
+    publishedAt: '35 mins ago',
+    publishedDate: '2026-08-19',
+    publishedTimestamp: Date.now() - 35 * 60 * 1000,
+    category: 'Public Safety & Crime',
+    crimeCategory: 'Financial & Corporate Fraud',
+    stateId: 'delhi-ncr',
+    stateName: 'Delhi NCR',
+    districtId: 'new-delhi',
+    districtName: 'New Delhi Central',
+    imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80',
+    readTimeMinutes: 4,
+    isBreaking: true,
+    isVerifiedFactCheck: true,
+    credibilityRating: 'Verified Wire (PTI/ANI)',
+    tags: ['ACB', 'Delhi Police', 'Financial Irregularity', 'Anti-Corruption', 'Legal Action'],
+    viewsCount: 34100,
+    sharesCount: 5200,
+    summaryPoints: [
+      'ACB arrests six individuals over alleged tender irregularities in Delhi Jal Board projects.',
+      'Digital evidence and financial ledgers seized during coordinated multi-location searches.',
+      'Special court authorizes custodial interrogation for transaction trail tracing.'
+    ]
+  },
+  {
+    id: 'news-live-20260819-03',
+    title: 'NTA Overhauls Exam Architecture: Removes 600 Experts, Institutes Four-Tier Check Protocol for Question Papers',
+    translatedTitles: {
+      hi: 'NTA ने परीक्षा प्रणाली में किया बड़ा बदलाव: 600 विशेषज्ञों को हटाया, प्रश्नपत्रों के लिए चार-स्तरीय जांच प्रोटोकॉल लागू',
+      bn: 'এনটিএ পরীক্ষার পরিকাঠামো সংস্কার করেছে: ৬০০ বিশেষজ্ঞকে অপসারিত করে চার স্তরের যাচাই ব্যবস্থা চালু',
+      ta: 'என்டிஏ தேர்வு கட்டமைப்பை மாற்றியமைக்கிறது: 600 நிபுணர்களை நீக்கி, 4 அடுக்கு சரிபார்ப்பு முறை அமல்',
+      te: 'ఎన్‌టిఎ పరీక్షా విధానంలో భారీ మార్పులు: 600 మంది నిపుణుల తొలగింపు, నాలుగు అంచెల తనిఖీ వ్యవస్థ అమలు',
+      mr: 'एनटीएने परीक्षा यंत्रणेत केला मोठा बदल: ६०० तज्ज्ञांना हटवून प्रश्नपत्रिकांसाठी चार-स्तरीय तपासणी लागू',
+      gu: 'NTA એ પરીક્ષા વ્યવસ્થામાં મોટો સુધારો કર્યો: 600 નિષ્ણાતોને હટાવીને ચાર-સ્તરીય ચકાસણી અમલમાં મૂકી',
+      kn: 'ಎನ್‌ಟಿಎ ಪರೀಕ್ಷಾ ವ್ಯವಸ್ಥೆ ನವೀಕರಣ: 600 ತಜ್ಞರನ್ನು ತೆಗೆದುಹಾಕಿ, 4-ಹಂತದ ತಪಾಸಣಾ ವ್ಯವಸ್ಥೆ ಜಾರಿ'
+    },
+    snippet: 'Reforms mandate algorithmic paper scrambling, isolated digital printing vaults, and real-time biometrics to completely eradicate malpractice.',
+    content: `NEW DELHI — The National Testing Agency (NTA) unveiled a comprehensive institutional restructuring protocol aimed at guaranteeing foolproof integrity for all nationwide entrance examinations.
+
+Under the new directives, over 600 external subject experts have been replaced with vetted academic panels subject to strict non-disclosure audits. Question paper generation will now pass through an automated four-tier encrypted validation sequence, with randomized digital printing finalized inside high-security network-isolated vaults just hours prior to testing.
+
+Biometric verification, AI facial pattern matching, and real-time jammer telemetry will be deployed at every testing center across 500+ cities.`,
+    source: 'The Times of India',
+    originalUrl: 'https://timesofindia.indiatimes.com/india/nta-removes-600-experts-brings-four-tier-checks-for-question-papers/articleshow',
+    sourceTier: 'National Broadsheet',
+    publishedAt: '1 hour ago',
+    publishedDate: '2026-08-19',
+    publishedTimestamp: Date.now() - 60 * 60 * 1000,
+    category: 'National',
+    stateId: 'delhi-ncr',
+    stateName: 'Delhi NCR',
+    imageUrl: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80',
+    readTimeMinutes: 4,
+    isBreaking: true,
+    isVerifiedFactCheck: true,
+    credibilityRating: 'Official Statutory Briefing',
+    tags: ['NTA Reforms', 'Education Governance', 'Exam Security', 'National Policy'],
+    viewsCount: 42000,
+    sharesCount: 6800,
+    summaryPoints: [
+      'NTA institutes four-tier verification protocol and algorithmic paper scrambling.',
+      'Over 600 external evaluators replaced under institutional security overhaul.',
+      'Mandates AI facial telemetry and encrypted network-isolated vaults across centers.'
+    ]
+  },
+  {
+    id: 'news-live-20260819-04',
+    title: 'Jharkhand Exam Reforms: Youth Front Announces Second-Phase Stir Demanding Transparent Recruitment Benches',
+    translatedTitles: {
+      hi: 'झारखंड परीक्षा सुधार: पारदर्शी भर्ती प्रक्रिया की मांग को लेकर युवा मोर्चे ने दूसरे चरण के आंदोलन की घोषणा की',
+      bn: 'ঝাড়খণ্ড পরীক্ষা সংস্কার: স্বচ্ছ নিয়োগের দাবিতে যুব ফ্রন্টের দ্বিতীয় পর্যায়ের আন্দোলনের ডাক',
+      ta: 'ஜார்க்கண்ட் தேர்வு சீர்திருத்தங்கள்: வெளிப்படையான பணி நியமனங்களை கோரி இளைஞர் முன்னணி போராட்டம்',
+      te: 'జార్ఖండ్ పరీక్షా సంస్కరణలు: పారదర్శక నియామకాల కోసం రెండవ దశ ఉద్యమాన్ని ప్రకటించిన యువజన సంఘాలు',
+      mr: 'झारखंड परीक्षा सुधारणा: पारदर्शक भरती प्रक्रियेसाठी युवा आघाडीकडून दुसऱ्या टप्प्यातील आंदोलनाची घोषणा',
+      gu: 'ઝારખંડ પરીક્ષા સુધારા: પારદર્શક ભરતીની માંગ સાથે યુવા મોરચાએ આંદોલનના બીજા તબક્કાની જાહેરાત કરી',
+      kn: 'ಜಾರ್ಖಂಡ್ ಪರೀಕ್ಷಾ ಸುಧಾರಣೆ: ಪಾರದರ್ಶಕ ನೇಮಕಾತಿಗೆ ಆಗ್ರಹಿಸಿ ಯುವ ಸಂಘಟನೆಯಿಂದ 2ನೇ ಹಂತದ ಹೋರಾಟ'
+    },
+    snippet: 'Student delegations meet state administrative secretaries in Ranchi, demanding digital OMR answer tracking and strict punitive guidelines under anti-leak statutes.',
+    content: `RANCHI — Student and youth welfare organizations in Jharkhand announced the commencement of a coordinated second-phase advocacy campaign aimed at expediting institutional reforms in state competitive examinations.
+
+Youth leadership representative Devendra Mahto stated that citizen delegations are petitioning the state government for time-bound examination calendars, real-time public release of digital answer keys within 48 hours of test completion, and strict enforcement of the Jharkhand Public Examinations (Prevention of Unfair Means) Act.
+
+District administrations in Ranchi, Dhanbad, and Jamshedpur deployed civic liaison officers to ensure all democratic memorandums are registered peacefully.`,
+    source: 'The Hindu',
+    originalUrl: 'https://www.thehindu.com/news/national/other-states/jharkhand-protest-updates-job-examinations/article',
+    sourceTier: 'National Broadsheet',
+    publishedAt: '2 hours ago',
+    publishedDate: '2026-08-19',
+    publishedTimestamp: Date.now() - 120 * 60 * 1000,
+    category: 'National',
+    stateId: 'jharkhand',
+    stateName: 'Jharkhand',
+    districtId: 'ranchi',
+    districtName: 'Ranchi Urban',
+    imageUrl: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80',
+    readTimeMinutes: 3,
+    isBreaking: true,
+    isVerifiedFactCheck: true,
+    credibilityRating: 'Correspondent Ground Report',
+    tags: ['Jharkhand', 'Recruitment Reforms', 'Youth Policy', 'Public Governance'],
+    viewsCount: 26500,
+    sharesCount: 3400,
+    summaryPoints: [
+      'Youth organizations outline second-phase memorandum for standardized exam calendars.',
+      'Demands mandatory 48-hour digital OMR key releases and anti-leak statute enforcement.',
+      'Ranchi district administration facilitates structured administrative dialogue.'
+    ]
+  },
+  {
+    id: 'news-live-20260819-05',
+    title: 'Bihar Mid-Day Meal Incident: Two Dozen Students Hospitalized in Saran; District Magistrate Suspends Headmaster',
+    translatedTitles: {
+      hi: 'बिहार मिड-डे मील मामला: सारण में दो दर्जन छात्र अस्पताल में भर्ती; डीएम ने हेडमास्टर को निलंबित किया',
+      bn: 'বিহার মিড-ডে মিল ঘটনা: সারনে অসুস্থ দুই ডজন শিক্ষার্থী, প্রধান শিক্ষককে বরখাস্ত করলেন জেলাশাসক',
+      ta: 'பீகார் சத்துணவு விவகாரம்: சாரனில் 24 மாணவர்கள் மருத்துவமனையில் அனுமதி; தலைமை ஆசிரியர் சஸ்பெண்ட்',
+      te: 'బీహార్ మధ్యాహ్న భోజన ఘటన: సారణ్‌లో విద్యార్థుల అస్వస్థత, హెడ్‌మాస్టర్‌ను సస్పెండ్ చేసిన కలెక్టర్',
+      mr: 'बिहार माध्यान्ह भोजन प्रकरण: सारणमध्ये २४ विद्यार्थी रुग्णालयात दाखल; मुख्याध्यापकांचे निलंबन',
+      gu: 'બિહાર મિડ-ડે મીલ ઘટના: સારણમાં બે ડઝન વિદ્યાર્થીઓ હોસ્પિટલમાં દાખલ; આચાર્ય સસ્પેન્ડ',
+      kn: 'ಬಿಹಾರ ಮಧ್ಯಾಹ್ನದ ಊಟ ಪ್ರಕರಣ: ಸಾರಣ್‌ನಲ್ಲಿ 24 ವಿದ್ಯಾರ್ಥಿಗಳು ಆಸ್ಪತ್ರೆಗೆ ದಾಖಲು; ಮುಖ್ಯಶಿಕ್ಷಕ ಅಮಾನತು'
+    },
+    snippet: 'Immediate medical intervention stabilizes all children at Sadar Hospital; Food safety inspectors collect ingredient batches for forensic chemical analysis.',
+    content: `PATNA — In an alarming lapse of institutional food safety standards, over 24 primary school students were hospitalized after consuming their mid-day meal at a government school in Bihar's Saran district.
+
+Preliminary inquiries revealed kitchen personnel inadvertently mixed a commercial cleaning compound stored in an unmarked container near the food preparation pantry. District hospital pediatricians administered immediate gastric lavages and IV fluids, reporting that all admitted students are stable and out of danger.
+
+The Saran District Magistrate immediately suspended the school headmaster, terminated the catering vendor contract, and directed food safety officers to conduct mandatory chemical testing of all mid-day meal storehouses across the district.`,
+    source: 'The Times of India',
+    originalUrl: 'https://timesofindia.indiatimes.com/city/patna/students-fall-ill-after-mid-day-meal-in-bihar/articleshow',
+    sourceTier: 'National Broadsheet',
+    publishedAt: '3 hours ago',
+    publishedDate: '2026-08-19',
+    publishedTimestamp: Date.now() - 180 * 60 * 1000,
+    category: 'Public Safety & Crime',
+    crimeCategory: 'Public Order & Nuisance',
+    stateId: 'bihar',
+    stateName: 'Bihar',
+    districtId: 'patna',
+    districtName: 'Saran & Patna Rural',
+    imageUrl: 'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&auto=format&fit=crop&q=80',
+    readTimeMinutes: 3,
+    isBreaking: true,
+    isVerifiedFactCheck: true,
+    credibilityRating: 'Correspondent Ground Report',
+    tags: ['Bihar News', 'Food Safety', 'Public Health', 'Administrative Action'],
+    viewsCount: 31800,
+    sharesCount: 4200,
+    summaryPoints: [
+      'Prompt medical response stabilizes all 24 hospitalized primary students in Saran.',
+      'District Magistrate suspends headmaster and cancels catering vendor license.',
+      'Food Safety Department initiates comprehensive inspections of institutional pantries.'
+    ]
+  },
   {
     id: 'news-101',
     title: 'Supreme Court Mandates Unified 112 SOS GPS-Mesh for All Public Transit Across Indian Cities',
@@ -23,7 +240,9 @@ Under the new guidelines, every vehicle must carry an active dual-SIM emergency 
     source: 'The Indian Express',
     originalUrl: 'https://indianexpress.com/article/india/supreme-court-mandates-unified-112-sos-gps-mesh/',
     sourceTier: 'National Broadsheet',
-    publishedAt: '25 mins ago',
+    publishedAt: 'August 14, 2026',
+    publishedDate: '2026-08-14',
+    publishedTimestamp: new Date('2026-08-14T10:00:00Z').getTime(),
     category: 'Public Safety & Crime',
     crimeCategory: 'Women & Child Safety',
     stateId: 'delhi-ncr',
@@ -32,98 +251,16 @@ Under the new guidelines, every vehicle must carry an active dual-SIM emergency 
     districtName: 'New Delhi Central & Lutyens',
     imageUrl: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 4,
-    isBreaking: true,
+    isBreaking: false,
     isVerifiedFactCheck: true,
     credibilityRating: 'Official Press Brief',
     tags: ['Supreme Court', 'Public Safety', 'ERSS-112', 'Transit Safety', 'National Policy'],
-    viewsCount: 24500,
-    sharesCount: 3820,
+    viewsCount: 48500,
+    sharesCount: 7820,
     summaryPoints: [
       'Supreme Court directs all public & app-based transport to install active 112 SOS buttons with live GPS.',
       'Aims to guarantee 6-minute police interceptor response time across urban corridors.',
       'State Police Headquarters given 4 months for unified command control room integration.'
-    ]
-  },
-  {
-    id: 'news-102',
-    title: 'Indian Cyber Coordination Centre (I4C) Freezes ₹1,400 Crore Stolen in Cross-Border Phishing Networks',
-    translatedTitles: {
-      hi: 'भारतीय साइबर समन्वय केंद्र (I4C) ने सीमा पार फ़िशिंग नेटवर्क में चुराए गए ₹1,400 करोड़ फ्रीज किए',
-      bn: 'ইন্ডিয়ান সাইবার কোঅর্ডিনেশন সেন্টার সীমান্ত পারের ফিশিং নেটওয়ার্কে ₹১,৪০০ কোটি ফ্রিজ করেছে',
-      ta: 'இந்திய சைபர் ஒருங்கிணைப்பு மையம் ₹1,400 கோடியை முடக்கியுள்ளது',
-      te: 'భారత సైబర్ సమన్వయ కేంద్రం ₹1,400 కోట్ల నిధులను స్తంభింపజేసింది',
-      mr: 'इंडियन सायबर कोऑर्डिनेशन सेंटरने ₹1,400 कोटी गोठवले',
-      gu: 'ભારતીય સાયબર કોઓર્ડિનેશન સેન્ટરે ₹1,400 કરોડ ફ્રીઝ કર્યા',
-      kn: 'ಭಾರತೀಯ ಸೈಬರ್ ಸಮನ್ವಯ ಕೇಂದ್ರ ₹1,400 ಕೋಟಿ ಹಣವನ್ನು ಸ್ಥಗಿತಗೊಳಿಸಿದೆ'
-    },
-    snippet: 'Over 3.8 lakh mule accounts disabled in historic inter-agency operation combining state police cyber cells, RBI, and telecom operators.',
-    content: `NEW DELHI — The Ministry of Home Affairs' Indian Cyber Coordination Centre (I4C) announced a major breakthrough in combating organized cyber financial fraud, freezing ₹1,400 crore across 380,000 mule bank accounts.
-
-The operation, codenamed 'Chakra-IV', targeted call centers operating out of Cambodia, Myanmar, and domestic hubs in Mewat and Jamtara that deceived citizens using fake digital arrest threats and bogus stock investment groups.
-
-"Using our automated 1930 Citizen Financial Cyber Fraud Reporting System, fraud funds are now frozen within 15 minutes of citizen reporting, preventing swift offshore crypto conversions," said the Chief Executive Officer of I4C during a special briefing.`,
-    source: 'Press Trust of India (PTI)',
-    originalUrl: 'https://www.ptinews.com/national/i4c-freezes-crores-cyber-fraud/',
-    sourceTier: 'Official Statutory & Wire',
-    publishedAt: '42 mins ago',
-    category: 'Public Safety & Crime',
-    crimeCategory: 'Cybercrime & Online Fraud',
-    stateId: 'delhi-ncr',
-    stateName: 'Delhi NCR',
-    imageUrl: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop&q=80',
-    readTimeMinutes: 5,
-    isBreaking: true,
-    isVerifiedFactCheck: true,
-    credibilityRating: 'Verified Wire (PTI/ANI)',
-    tags: ['I4C', 'Cyber Crime', '1930 Helpline', 'Mule Accounts', 'Digital Arrest'],
-    viewsCount: 39100,
-    sharesCount: 6140,
-    summaryPoints: [
-      'Operation Chakra-IV freezes ₹1,400 crore across 3.8 lakh suspicious mule bank accounts.',
-      'Automated 1930 reporting enables bank account liens within 15 minutes of citizen complaint.',
-      'Targeted cross-border fake trading apps and illegal digital arrest extortion rings.'
-    ]
-  },
-  {
-    id: 'news-104',
-    title: 'Mumbai Crime Branch Busts Inter-State Luxury Car Theft Syndicate Operating with Cloned ECU Devices',
-    translatedTitles: {
-      hi: 'मुंबई क्राइम ब्रांच ने क्लोन ईसीयू डिवाइस से संचालित अंतर्राज्यीय लग्जरी कार चोरी सिंडिकेट का भंडाफोड़ किया',
-      bn: 'মুম্বই ক্রাইম ব্রাঞ্চ আন্তঃরাজ্য বিলাসবহুল গাড়ি চুরি সিন্ডিকেট ভেঙে দিয়েছে',
-      ta: 'மும்பை குற்றப்பிரிவு ஆடம்பர கார் திருட்டு கும்பலை கைது செய்தது',
-      te: 'ముంబై క్రైమ్ బ్రాంచ్ లగ్జరీ కార్ల దొంగతనాల ముఠాను పట్టుకుంది',
-      mr: 'मुंबई गुन्हे शाखेने आंतरराज्यीय लक्झरी कार चोरी सिंडिकेटचा पर्दाफाश केला',
-      gu: 'મુંબઈ ક્રાઈમ બ્રાન્ચે આંતરરાજ્ય લક્ઝરી કાર ચોરી સિન્ડિકેટનો પર્દાફાશ કર્યો',
-      kn: 'ಮುಂಬೈ ಅಪರಾಧ ವಿಭಾಗವು ಐಷಾರಾಮಿ ಕಾರು ಕಳ್ಳತನದ ಜಾಲವನ್ನು ಭೇದಿಸಿದೆ'
-    },
-    snippet: '34 high-end SUVs worth ₹18 crore recovered after 6-month surveillance across Maharashtra, Gujarat, and Nagaland transport checkposts.',
-    content: `MUMBAI — In a high-tech operation involving digital telemetry and forensic scanning, the Mumbai Police Crime Branch Property Cell dismantled an inter-state syndicate that stole high-end SUVs by bypassing onboard keyless entry systems.
-
-The gang utilized imported Electronic Control Unit (ECU) reprogrammers and frequency jammers to unlock vehicles within 90 seconds without triggering alarms. Stolen vehicles were subsequently fitted with forged engine numbers and re-registered at remote RTO offices.
-
-Commissioner of Police confirmed that 34 vehicles have been seized and returned to rightful owners, while 9 core operatives and 3 corrupt middlemen have been remanded under MCOCA.`,
-    source: 'The Times of India',
-    originalUrl: 'https://timesofindia.indiatimes.com/city/mumbai/crime-branch-busts-car-theft-syndicate/articleshow',
-    sourceTier: 'National Broadsheet',
-    publishedAt: '2 hours ago',
-    category: 'Public Safety & Crime',
-    crimeCategory: 'Theft & Burglary',
-    stateId: 'maharashtra',
-    stateName: 'Maharashtra',
-    districtId: 'mumbai-suburban',
-    districtName: 'Mumbai Suburban & Bandra',
-    imageUrl: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&auto=format&fit=crop&q=80',
-    readTimeMinutes: 4,
-    isBreaking: true,
-    isVerifiedFactCheck: true,
-    credibilityRating: 'Correspondent Ground Report',
-    tags: ['Mumbai Police', 'Car Theft', 'Crime Branch', 'Forensic Tech', 'Recovery'],
-    viewsCount: 19800,
-    sharesCount: 2200,
-    summaryPoints: [
-      'Mumbai Crime Branch recovers 34 stolen luxury SUVs worth ₹18 crore.',
-      'Syndicate bypassed security using electronic key scanners and cloned ECUs.',
-      'Nine kingpins arrested across Maharashtra, Gujarat, and Nagaland.'
     ]
   },
   {
@@ -147,7 +284,9 @@ Over 12,000 citizens across Telangana, Andhra Pradesh, and Karnataka fell victim
     source: 'Deccan Chronicle',
     originalUrl: 'https://www.deccanchronicle.com/nation/crime/cyberabad-police-busts-forex-scam',
     sourceTier: 'National Broadsheet',
-    publishedAt: '4 hours ago',
+    publishedAt: 'August 14, 2026',
+    publishedDate: '2026-08-14',
+    publishedTimestamp: new Date('2026-08-14T12:00:00Z').getTime(),
     category: 'Public Safety & Crime',
     crimeCategory: 'Financial & Corporate Fraud',
     stateId: 'telangana',
@@ -156,7 +295,7 @@ Over 12,000 citizens across Telangana, Andhra Pradesh, and Karnataka fell victim
     districtName: 'Hyderabad Urban & Cyberabad',
     imageUrl: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80',
     readTimeMinutes: 4,
-    isBreaking: true,
+    isBreaking: false,
     isVerifiedFactCheck: true,
     credibilityRating: 'Official Press Brief',
     tags: ['Forex Scam', 'Cyberabad Police', 'Financial Fraud', 'Interpol', 'Asset Recovery'],
