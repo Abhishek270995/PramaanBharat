@@ -26,11 +26,12 @@ interface CommunityVoicesProps {
   subscription?: UserSubscription;
 }
 
-const LOCAL_STORAGE_COMMUNITY_KEY = 'pramaan_bharat_community_topics_v1';
+const LOCAL_STORAGE_COMMUNITY_KEY = 'pramaan_bharat_community_topics_v3';
 
-const getLiveCommunityTimeAgo = (createdTimestamp?: number, fallbackStr?: string): string => {
+const getLiveCommunityTimeAgo = (createdTimestamp?: number, fallbackStr?: string, currentNow?: number): string => {
+  const now = currentNow || Date.now();
   if (!createdTimestamp) return fallbackStr || 'Just now';
-  const diffMs = Date.now() - createdTimestamp;
+  const diffMs = now - createdTimestamp;
   const diffMins = Math.max(0, Math.floor(diffMs / 60000));
   
   if (diffMins < 1) return 'Just now';
@@ -87,11 +88,11 @@ export const CommunityVoices: React.FC<CommunityVoicesProps> = ({
     }
   }, [topics]);
 
-  // Dynamic live time-ago updater (recalculates every 15 seconds)
+  // Dynamic live time-ago updater (recalculates every 10 seconds)
   useEffect(() => {
     const timer = setInterval(() => {
       setNowTimestamp(Date.now());
-    }, 15000);
+    }, 10000);
     return () => clearInterval(timer);
   }, []);
 
@@ -104,9 +105,9 @@ export const CommunityVoices: React.FC<CommunityVoicesProps> = ({
     // Simulate real-time community engagement: increment upvotes/activity on trending topics
     setTimeout(() => {
       setTopics(prev => {
-        return prev.map(t => {
+        return prev.map((t, idx) => {
           // Slight chance of simulated community upvote activity on hot concerns
-          if (Math.random() > 0.65 && !t.hasUpvoted) {
+          if ((Math.random() > 0.6 || idx === 0) && !t.hasUpvoted) {
             return {
               ...t,
               upvotes: t.upvotes + 1
@@ -392,7 +393,7 @@ export const CommunityVoices: React.FC<CommunityVoicesProps> = ({
                 <span className="text-slate-400">•</span>
                 <span className="text-slate-500 font-medium flex items-center gap-0.5">
                   <Clock className="w-3 h-3 text-slate-400" />
-                  {getLiveCommunityTimeAgo(topic.createdTimestamp, topic.createdAt)}
+                  {getLiveCommunityTimeAgo(topic.createdTimestamp, topic.createdAt, nowTimestamp)}
                 </span>
               </div>
 

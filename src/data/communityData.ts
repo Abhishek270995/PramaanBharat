@@ -12,13 +12,13 @@ export const COMMUNITY_TOPICS: CommunityTopic[] = [
     urgency: 'Urgent',
     authorName: 'Tathagata Sengupta',
     authorType: 'RWA Member',
-    upvotes: 892,
+    upvotes: 924,
     hasUpvoted: false,
-    commentsCount: 64,
+    commentsCount: 68,
     policeStatus: 'Police Patrol Assigned',
     policeRemarks: 'Kolkata Police Lalbazar Control Room has designated dedicated civic liaisons for real-time audit filings.',
     createdAt: 'Just now',
-    createdTimestamp: Date.now() - 8 * 60 * 1000
+    createdTimestamp: Date.now() - 4 * 60 * 1000
   },
   {
     id: 'comm-live-02',
@@ -31,13 +31,13 @@ export const COMMUNITY_TOPICS: CommunityTopic[] = [
     urgency: 'Urgent',
     authorName: 'Col. Vikramaditya Sen (Retd.)',
     authorType: 'Resident Citizen',
-    upvotes: 745,
+    upvotes: 762,
     hasUpvoted: true,
-    commentsCount: 58,
+    commentsCount: 61,
     policeStatus: 'Under Verification',
     policeRemarks: 'South District Cyber Team collecting society CCTV footage. Advisories sent to residential security guards.',
-    createdAt: '24 mins ago',
-    createdTimestamp: Date.now() - 24 * 60 * 1000
+    createdAt: '12 mins ago',
+    createdTimestamp: Date.now() - 12 * 60 * 1000
   },
   {
     id: 'comm-live-03',
@@ -50,13 +50,13 @@ export const COMMUNITY_TOPICS: CommunityTopic[] = [
     urgency: 'High',
     authorName: 'Arundhati Roychowdhury',
     authorType: 'RWA Member',
-    upvotes: 412,
+    upvotes: 428,
     hasUpvoted: false,
-    commentsCount: 34,
+    commentsCount: 36,
     policeStatus: 'Police Patrol Assigned',
     policeRemarks: 'Indiranagar Law & Order Beat-2 van directed to maintain static beacon presence between 21:00 and 01:00. BBMP electrical wing notified with Work Order #4921.',
-    createdAt: '45 mins ago',
-    createdTimestamp: Date.now() - 45 * 60 * 1000
+    createdAt: '25 mins ago',
+    createdTimestamp: Date.now() - 25 * 60 * 1000
   },
   {
     id: 'comm-live-04',
@@ -69,13 +69,13 @@ export const COMMUNITY_TOPICS: CommunityTopic[] = [
     urgency: 'Low',
     authorName: 'Farhan Merchant',
     authorType: 'Community Safety Volunteer',
-    upvotes: 560,
+    upvotes: 574,
     hasUpvoted: false,
-    commentsCount: 48,
+    commentsCount: 51,
     policeStatus: 'Resolved by Community & Police',
     policeRemarks: 'Commended Bandra RWA for proactive model. Crime incidence in the sector decreased 65% over past 45 days.',
-    createdAt: '1 hour ago',
-    createdTimestamp: Date.now() - 75 * 60 * 1000
+    createdAt: '42 mins ago',
+    createdTimestamp: Date.now() - 42 * 60 * 1000
   },
   {
     id: 'comm-live-05',
@@ -88,13 +88,13 @@ export const COMMUNITY_TOPICS: CommunityTopic[] = [
     urgency: 'High',
     authorName: 'Dr. S. Meenakshi',
     authorType: 'Resident Citizen',
-    upvotes: 310,
+    upvotes: 326,
     hasUpvoted: false,
-    commentsCount: 22,
+    commentsCount: 24,
     policeStatus: 'Ward Action Initiated',
     policeRemarks: 'Traffic Inspector Anna Nagar stationed mobile checkpost at Roundtana. 14 heavy vehicles seized & challaned yesterday.',
-    createdAt: '2 hours ago',
-    createdTimestamp: Date.now() - 120 * 60 * 1000
+    createdAt: '1 hour ago',
+    createdTimestamp: Date.now() - 65 * 60 * 1000
   },
   {
     id: 'comm-live-06',
@@ -107,13 +107,13 @@ export const COMMUNITY_TOPICS: CommunityTopic[] = [
     urgency: 'Medium',
     authorName: 'Deepa Varma',
     authorType: 'Community Safety Volunteer',
-    upvotes: 485,
+    upvotes: 498,
     hasUpvoted: true,
-    commentsCount: 41,
+    commentsCount: 44,
     policeStatus: 'Police Patrol Assigned',
     policeRemarks: 'Cyberabad She Teams and Traffic wing reviewing proposed 6-station route map for clearance.',
-    createdAt: '3 hours ago',
-    createdTimestamp: Date.now() - 180 * 60 * 1000
+    createdAt: '2 hours ago',
+    createdTimestamp: Date.now() - 110 * 60 * 1000
   },
   {
     id: 'comm-live-07',
@@ -126,13 +126,13 @@ export const COMMUNITY_TOPICS: CommunityTopic[] = [
     urgency: 'High',
     authorName: 'Rajeshwar Prasad',
     authorType: 'Resident Citizen',
-    upvotes: 390,
+    upvotes: 405,
     hasUpvoted: false,
-    commentsCount: 29,
+    commentsCount: 32,
     policeStatus: 'Ward Action Initiated',
     policeRemarks: 'District Magistrate joint task force inspecting all block level storerooms.',
-    createdAt: '3 hours ago',
-    createdTimestamp: Date.now() - 210 * 60 * 1000
+    createdAt: '2 hours ago',
+    createdTimestamp: Date.now() - 135 * 60 * 1000
   }
 ];
 
