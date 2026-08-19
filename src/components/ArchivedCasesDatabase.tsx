@@ -20,7 +20,7 @@ import {
   Scale
 } from 'lucide-react';
 import { ArchivedCase, AuthorizedOfficer, StateInfo, CrimeCategory } from '../types';
-import { ARCHIVED_CASES_DATA } from '../data/crimeData';
+import { SOLVED_ARCHIVED_CASES } from '../data/crimeData';
 
 interface ArchivedCasesDatabaseProps {
   authorizedOfficer: AuthorizedOfficer | null;
@@ -43,26 +43,26 @@ export const ArchivedCasesDatabase: React.FC<ArchivedCasesDatabaseProps> = ({
   const [secondsUntilSync, setSecondsUntilSync] = useState<number>(60);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [nowTimestamp, setNowTimestamp] = useState<number>(Date.now());
-  const [casesList, setCasesList] = useState<ArchivedCase[]>(ARCHIVED_CASES_DATA);
+  const [casesList, setCasesList] = useState<ArchivedCase[]>(SOLVED_ARCHIVED_CASES);
 
-  // Dynamic live clock
+  // Dynamic live clock (updates every 10s)
   useEffect(() => {
     const timer = setInterval(() => {
       setNowTimestamp(Date.now());
-    }, 15000);
+    }, 10000);
     return () => clearInterval(timer);
   }, []);
 
-  // Perform sync
+  // Perform sync with CCTNS real-time stream
   const handlePerformSync = useCallback(() => {
     setIsSyncing(true);
     setLastSyncTime(Date.now());
     setSecondsUntilSync(60);
 
     setTimeout(() => {
-      setCasesList(ARCHIVED_CASES_DATA);
+      setCasesList(SOLVED_ARCHIVED_CASES);
       setIsSyncing(false);
-    }, 600);
+    }, 500);
   }, []);
 
   // Auto-refresh countdown loop (60s cycle)
