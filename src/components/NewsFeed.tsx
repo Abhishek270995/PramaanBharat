@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { NewsArticle, LanguageCode, NewsCategory, StateInfo, DistrictInfo, CrimeCategory, TimeRangeKey, SourceTier } from '../types';
 import { ArticleCard } from './ArticleCard';
-import { isArticleInTimeRange, getTimeframeLabel, getLiveTimeAgo } from '../utils/dateUtils';
+import { isArticleInTimeRange, getTimeframeLabel, getLiveTimeAgo, sortArticlesByLatest } from '../utils/dateUtils';
 import { VERIFIED_SOURCES_CATALOG, getSourceByName, getArticleSourceUrl } from '../data/verifiedSources';
 import { VerifiedSourcesModal } from './VerifiedSourcesModal';
 
@@ -100,17 +100,20 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  // First apply timeframe filter to base article set
-  const timeframeArticles = isBookmarksView 
-    ? articles 
-    : articles.filter(a => isArticleInTimeRange(a, timeKey, customStartDate, customEndDate));
+  // First apply timeframe filter to base article set, sorted newest-first
+  const timeframeArticles = useMemo(() => {
+    const raw = isBookmarksView 
+      ? articles 
+      : articles.filter(a => isArticleInTimeRange(a, timeKey, customStartDate, customEndDate));
+    return sortArticlesByLatest(raw);
+  }, [articles, isBookmarksView, timeKey, customStartDate, customEndDate]);
 
-  // Filter logic
+  // Filter logic strictly ordered latest-first
   let filtered = useMemo(() => {
     let list = timeframeArticles;
 
     if (isBookmarksView) {
-      return list.filter(a => bookmarkedIds.includes(a.id));
+      return sortArticlesByLatest(list.filter(a => bookmarkedIds.includes(a.id)));
     }
 
     // 1. State & District filter (strictly prioritized)
@@ -180,7 +183,8 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
       );
     }
 
-    return list;
+    // Strictly sort all filtered results newest-first
+    return sortArticlesByLatest(list);
   }, [
     timeframeArticles, 
     isBookmarksView, 
@@ -194,7 +198,7 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
     searchQuery
   ]);
 
-  // Multi-slide breaking news pool with 8-12 verified top slides across categories & regions
+  // Multi-slide breaking news pool strictly sorted with newest/freshest reports first
   const breakingPool = useMemo(() => {
     if (isBookmarksView || searchQuery || selectedSourceFilter !== 'All' || selectedTierFilter !== 'All') {
       return [];
@@ -235,7 +239,9 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
       }
     });
 
-    return pool.length > 0 ? pool : timeframeArticles.slice(0, 8);
+    const candidates = pool.length > 0 ? pool : timeframeArticles.slice(0, 8);
+    // Strictly sort breaking slides newest first!
+    return sortArticlesByLatest(candidates);
   }, [filtered, timeframeArticles, isBookmarksView, searchQuery, selectedSourceFilter, selectedTierFilter, selectedState, selectedDistrict]);
 
   // Reset slide index when location or category changes
@@ -255,9 +261,12 @@ export const NewsFeed: React.FC<NewsFeedProps> = ({
   }, [breakingPool.length, isHeroHovered]);
 
   const activeBreakingArticle = breakingPool[breakingSlideIndex] || breakingPool[0] || null;
-  const standardArticles = activeBreakingArticle 
-    ? filtered.filter(a => a.id !== activeBreakingArticle.id) 
-    : filtered;
+  const standardArticles = useMemo(() => {
+    const raw = activeBreakingArticle 
+      ? filtered.filter(a => a.id !== activeBreakingArticle.id) 
+      : filtered;
+    return sortArticlesByLatest(raw);
+  }, [filtered, activeBreakingArticle]);
 
   // Category counts calculation helper based on current timeframe
   const getCategoryCount = (catId: NewsCategory) => {

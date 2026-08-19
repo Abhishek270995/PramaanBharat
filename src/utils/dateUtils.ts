@@ -1,6 +1,62 @@
 import { NewsArticle, TimeRangeKey } from '../types';
 
 /**
+ * Calculates a precise numeric sort timestamp (in milliseconds) for any article
+ * so latest articles are strictly ordered first.
+ */
+export function getArticleSortTimestamp(article: NewsArticle): number {
+  if (article.publishedTimestamp && article.publishedTimestamp > 0) {
+    return article.publishedTimestamp;
+  }
+
+  const pub = (article.publishedAt || '').toLowerCase().trim();
+  const now = Date.now();
+
+  if (pub.includes('just now')) {
+    return now - 30 * 1000; // 30s ago
+  }
+  
+  const minMatch = pub.match(/(\d+)\s*min/);
+  if (minMatch && minMatch[1]) {
+    return now - parseInt(minMatch[1], 10) * 60 * 1000;
+  }
+
+  const hrMatch = pub.match(/(\d+)\s*hour/);
+  if (hrMatch && hrMatch[1]) {
+    return now - parseInt(hrMatch[1], 10) * 3600 * 1000;
+  }
+
+  if (pub.includes('yesterday') || pub.includes('1 day')) {
+    return now - 24 * 3600 * 1000;
+  }
+
+  const dayMatch = pub.match(/(\d+)\s*day/);
+  if (dayMatch && dayMatch[1]) {
+    return now - parseInt(dayMatch[1], 10) * 24 * 3600 * 1000;
+  }
+
+  if (article.publishedDate) {
+    const parts = article.publishedDate.split('-');
+    if (parts.length === 3) {
+      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)).getTime();
+    }
+  }
+
+  return now - 48 * 3600 * 1000;
+}
+
+/**
+ * Sorts articles array so the latest news is always first (at top).
+ */
+export function sortArticlesByLatest(articles: NewsArticle[]): NewsArticle[] {
+  return [...articles].sort((a, b) => {
+    const timeA = getArticleSortTimestamp(a);
+    const timeB = getArticleSortTimestamp(b);
+    return timeB - timeA;
+  });
+}
+
+/**
  * Parses article date into a standard Date object
  */
 export function getArticleDate(article: NewsArticle, referenceDateStr: string = '2026-08-15'): Date {

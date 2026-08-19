@@ -70,6 +70,7 @@ import {
 import { INDIA_STATES_DATA } from './data/indiaGeoData';
 import { LIVE_SAFETY_ALERTS } from './data/crimeData';
 import { NEWS_ARTICLES } from './data/newsData';
+import { sortArticlesByLatest } from './utils/dateUtils';
 import { Shield, Sparkles, MapPin, Archive, MessageSquare, Newspaper, Heart, ChevronUp, Lock, CheckCircle2, X } from 'lucide-react';
 
 export default function App() {
@@ -93,7 +94,7 @@ export default function App() {
     }
   });
   const [isBookmarksView, setIsBookmarksView] = useState<boolean>(false);
-  const [allArticles, setAllArticles] = useState<NewsArticle[]>(NEWS_ARTICLES);
+  const [allArticles, setAllArticles] = useState<NewsArticle[]>(() => sortArticlesByLatest(NEWS_ARTICLES));
   const [isFetchingLiveNews, setIsFetchingLiveNews] = useState<boolean>(false);
   const [subscription, setSubscription] = useState<UserSubscription>(getSubscriptionState());
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState<boolean>(false);
@@ -288,7 +289,7 @@ export default function App() {
             const existingTitles = new Set(prev.map(a => a.title.toLowerCase().trim()));
             const newItems = data.articles.filter((a: NewsArticle) => !existingTitles.has(a.title.toLowerCase().trim()));
             if (newItems.length > 0) {
-              return [...newItems, ...prev];
+              return sortArticlesByLatest([...newItems, ...prev]);
             }
             return prev;
           });
@@ -352,7 +353,7 @@ export default function App() {
             const existingTitles = new Set(prev.map(a => a.title.toLowerCase().trim()));
             const newItems = mappedArticles.filter((a: NewsArticle) => !existingTitles.has(a.title.toLowerCase().trim()));
             if (newItems.length > 0) {
-              return [...newItems, ...prev];
+              return sortArticlesByLatest([...newItems, ...prev]);
             }
             return prev;
           });
@@ -416,7 +417,10 @@ export default function App() {
         setAllArticles(prev => {
           const existingTitles = new Set(prev.map(a => a.title.toLowerCase().trim()));
           const newItems = data.articles.filter((a: NewsArticle) => !existingTitles.has(a.title.toLowerCase().trim()));
-          return [...newItems, ...prev];
+          if (newItems.length > 0) {
+            return sortArticlesByLatest([...newItems, ...prev]);
+          }
+          return prev;
         });
       }
     } catch (err) {
