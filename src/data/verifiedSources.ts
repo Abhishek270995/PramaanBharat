@@ -431,7 +431,7 @@ export const getArticleSourceUrl = (article: { title: string; source: string; or
     return `https://timesofindia.indiatimes.com/topic/${encodeURIComponent((keywords || cleanTitle).replace(/\s+/g, '-'))}`;
   }
   if (sLower.includes('press trust of india') || sLower.includes('pti')) {
-    return `https://www.ptinews.com/search?search_text=${encodedKeywords}`;
+    return `https://www.google.com/search?q=${encodeURIComponent(`${keywords || cleanTitle} PTI Press Trust of India news`)}`;
   }
   if (sLower.includes('ani') || sLower.includes('asian news international')) {
     return `https://www.aninews.in/search?query=${encodedKeywords}`;
