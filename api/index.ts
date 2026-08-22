@@ -402,26 +402,124 @@ const INDIAN_STATES_KEYWORDS: Record<string, { id: string; name: string }> = {
   jharkhand: { id: 'jharkhand', name: 'Jharkhand' }
 };
 
-const CATEGORY_IMAGES: Record<string, string[]> = {
-  'Public Safety & Crime': [
-    'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80'
-  ],
-  Tech: [
-    'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&auto=format&fit=crop&q=80'
-  ],
-  Business: [
-    'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&auto=format&fit=crop&q=80'
-  ],
-  National: [
-    'https://images.unsplash.com/photo-1509749837427-ac94a2553d0e?w=800&auto=format&fit=crop&q=80',
-    'https://images.unsplash.com/photo-1532375810709-75b1da00537c?w=800&auto=format&fit=crop&q=80'
-  ]
-};
+const TOPIC_IMAGE_POOLS = [
+  {
+    keywords: ['railway', 'train', 'vande bharat', 'rajdhani', 'kavach', 'track', 'locomotive', 'station', 'irctc'],
+    images: [
+      'https://images.unsplash.com/photo-1509749837427-ac94a2553d0e?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=800&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    keywords: ['court', 'judge', 'supreme court', 'high court', 'bns', 'bnss', 'bail', 'verdict', 'judiciary', 'chargesheet', 'counsel', 'bench', 'magistrate'],
+    images: [
+      'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1453733197781-30886f6424a9?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=800&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    keywords: ['cyber', 'scam', 'phishing', 'deepfake', 'hacked', 'apk', 'digital arrest', 'crypto', 'otp', 'online fraud', 'mule', 'malware', 'ai '],
+    images: [
+      'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    keywords: ['police', 'arrest', 'seized', 'cbi', 'ed ', 'acb', 'raid', 'custody', 'cop', 'patrol', 'special cell', 'crime', 'theft', 'smuggling'],
+    images: [
+      'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1589578527966-fdac0f44566c?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1508847154043-be5407fcaa5a?w=800&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    keywords: ['fire', 'blaze', 'blast', 'burn', 'flame', 'rescue', 'disaster', 'ndrf', 'sdrf', 'emergency'],
+    images: [
+      'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1508873696983-2df5293cb325?w=800&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    keywords: ['isro', 'satellite', 'rocket', 'drdo', 'space', 'missile', 'gaganyaan', 'chandrayaan', 'gslv', 'orbit'],
+    images: [
+      'https://images.unsplash.com/photo-1517976487515-534a28cb75f5?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    keywords: ['rain', 'flood', 'monsoon', 'storm', 'cyclone', 'imd', 'weather', 'heatwave'],
+    images: [
+      'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1561553873-e8491a564fd0?w=800&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    keywords: ['rbi', 'bank', 'rupee', 'stock', 'market', 'gdp', 'inflation', 'trade', 'startup', 'sensex', 'nifty', 'gst'],
+    images: [
+      'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    keywords: ['hospital', 'doctor', 'patient', 'health', 'medical', 'food safety', 'poison', 'disease', 'vaccine'],
+    images: [
+      'https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    keywords: ['expressway', 'highway', 'road', 'traffic', 'bridge', 'metro', 'ev ', 'infrastructure'],
+    images: [
+      'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=800&auto=format&fit=crop&q=80'
+    ]
+  },
+  {
+    keywords: ['parliament', 'cabinet', 'minister', 'pib', 'governance', 'election', 'delhi', 'modi', 'constitution'],
+    images: [
+      'https://images.unsplash.com/photo-1532375810709-75b1da00537c?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=800&auto=format&fit=crop&q=80'
+    ]
+  }
+];
+
+const DEFAULT_SERVER_IMAGES = [
+  'https://images.unsplash.com/photo-1532375810709-75b1da00537c?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=800&auto=format&fit=crop&q=80'
+];
+
+function resolveServerNewsImage(title: string, rawImg?: string, category?: string, idx: number = 0): string {
+  if (rawImg && rawImg.startsWith('http')) {
+    const isOverusedTrain = rawImg.includes('photo-1509749837427-ac94a2553d0e');
+    const isActualTrain = title.toLowerCase().includes('train') || title.toLowerCase().includes('railway');
+    if (!isOverusedTrain || isActualTrain) {
+      return rawImg;
+    }
+  }
+
+  const textToScan = `${title} ${category || ''}`.toLowerCase();
+  for (const pool of TOPIC_IMAGE_POOLS) {
+    for (const kw of pool.keywords) {
+      if (textToScan.includes(kw)) {
+        return pool.images[idx % pool.images.length];
+      }
+    }
+  }
+  return DEFAULT_SERVER_IMAGES[idx % DEFAULT_SERVER_IMAGES.length];
+}
 
 async function fetchRssWireArticles(options: {
   category?: string;
@@ -540,9 +638,24 @@ async function fetchRssWireArticles(options: {
           articleCat = 'Business';
         }
 
-        // Pick matching image
-        const imgPool = CATEGORY_IMAGES[articleCat] || CATEGORY_IMAGES.National;
-        const assignedImg = imgPool[articles.length % imgPool.length];
+        // Extract authentic image from XML tags if present
+        let realImgUrl: string | undefined = undefined;
+        const mediaContentMatch = itemBlock.match(/<media:content[^>]+url=["']([^"']+)["']/i);
+        const mediaThumbMatch = itemBlock.match(/<media:thumbnail[^>]+url=["']([^"']+)["']/i);
+        const enclosureMatch = itemBlock.match(/<enclosure[^>]+url=["']([^"']+)["'][^>]*type=["']image/i) || itemBlock.match(/<enclosure[^>]*type=["']image[^>]*url=["']([^"']+)["']/i);
+        const imgTagMatch = itemBlock.match(/<img[^>]+src=["']([^"']+)["']/i);
+
+        if (mediaContentMatch && mediaContentMatch[1]?.startsWith('http')) {
+          realImgUrl = mediaContentMatch[1];
+        } else if (mediaThumbMatch && mediaThumbMatch[1]?.startsWith('http')) {
+          realImgUrl = mediaThumbMatch[1];
+        } else if (enclosureMatch && enclosureMatch[1]?.startsWith('http')) {
+          realImgUrl = enclosureMatch[1];
+        } else if (imgTagMatch && imgTagMatch[1]?.startsWith('http')) {
+          realImgUrl = imgTagMatch[1];
+        }
+
+        const assignedImg = resolveServerNewsImage(cleanTitle, realImgUrl, articleCat, articles.length);
 
         articles.push({
           id: `wire-rss-${Date.now()}-${articles.length + 1}`,

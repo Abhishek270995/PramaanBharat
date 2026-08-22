@@ -55,6 +55,9 @@ import {
 import { 
   LocationDetectionResult 
 } from './utils/geolocationUtils';
+import { 
+  getRelevantNewsImage 
+} from './utils/imageUtils';
 
 import { 
   StateInfo, 
@@ -341,7 +344,12 @@ export default function App() {
               category: targetCat && targetCat !== 'All' ? targetCat : 'National',
               stateId: targetState ? targetState.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'delhi-ncr',
               stateName: targetState || 'Delhi NCR',
-              imageUrl: item.thumbnail || item.enclosure?.link || 'https://images.unsplash.com/photo-1509749837427-ac94a2553d0e?w=800&auto=format&fit=crop&q=80',
+              imageUrl: getRelevantNewsImage(
+                cleanTitle,
+                item.thumbnail || item.enclosure?.link || (item.description && typeof item.description === 'string' ? (item.description.match(/<img[^>]+src=["']([^"']+)["']/i) || [])[1] : undefined),
+                targetCat || 'National',
+                idx
+              ),
               readTimeMinutes: 3,
               isBreaking: true,
               isVerifiedFactCheck: true,

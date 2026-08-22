@@ -18,6 +18,7 @@ import {
 import { NewsArticle, LanguageCode } from '../types';
 import { getSourceByName, getArticleSourceUrl } from '../data/verifiedSources';
 import { UserSubscription, consumeAiCredit } from '../utils/subscriptionUtils';
+import { getRelevantNewsImage } from '../utils/imageUtils';
 
 interface ArticleModalProps {
   article: NewsArticle | null;
@@ -206,16 +207,26 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
         </div>
 
         {/* Hero Image */}
-        {article.imageUrl && (
-          <div className="w-full h-64 sm:h-80 rounded-2xl overflow-hidden my-4 bg-slate-100 border border-slate-200">
-            <img
-              src={article.imageUrl}
-              alt={article.title}
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
+        {(() => {
+          const resolvedImg = getRelevantNewsImage(article.title, article.imageUrl, article.category);
+          return (
+            <div className="w-full h-64 sm:h-80 rounded-2xl overflow-hidden my-4 bg-slate-100 border border-slate-200">
+              <img
+                src={resolvedImg}
+                alt={article.title}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  const fallback = getRelevantNewsImage(article.title, undefined, article.category, 3);
+                  if (target.src !== fallback) {
+                    target.src = fallback;
+                  }
+                }}
+              />
+            </div>
+          );
+        })()}
 
         {/* AI Key Takeaways Box */}
         <div className="my-5 p-4 sm:p-5 bg-gradient-to-br from-blue-50/90 to-indigo-50/90 border border-blue-200/90 rounded-2xl">

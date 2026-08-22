@@ -14,6 +14,7 @@ import {
 import { NewsArticle, LanguageCode } from '../types';
 import { getSourceByName, getArticleSourceUrl } from '../data/verifiedSources';
 import { getLiveTimeAgo } from '../utils/dateUtils';
+import { getRelevantNewsImage } from '../utils/imageUtils';
 
 interface ArticleCardProps {
   article: NewsArticle;
@@ -166,17 +167,27 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
             </p>
           </div>
 
-          {article.imageUrl && (
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0 bg-slate-100 border border-slate-200">
-              <img
-                src={article.imageUrl}
-                alt={article.title}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-              />
-            </div>
-          )}
+          {(() => {
+            const resolvedImg = getRelevantNewsImage(article.title, article.imageUrl, article.category);
+            return (
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden shrink-0 bg-slate-100 border border-slate-200">
+                <img
+                  src={resolvedImg}
+                  alt={article.title}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    const fallback = getRelevantNewsImage(article.title, undefined, article.category, 2);
+                    if (target.src !== fallback) {
+                      target.src = fallback;
+                    }
+                  }}
+                />
+              </div>
+            );
+          })()}
         </div>
 
         {/* Tags */}
