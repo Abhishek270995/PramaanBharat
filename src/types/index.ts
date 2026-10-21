@@ -182,8 +182,8 @@ export interface NewsArticle {
   isVerifiedFactCheck?: boolean;
   credibilityRating: CredibilityRating | string;
   tags: string[];
-  viewsCount: number;
-  sharesCount: number;
+  viewsCount?: number;
+  sharesCount?: number;
   relatedArticleIds?: string[];
   summaryPoints?: string[];
   originalUrl?: string;
@@ -250,6 +250,8 @@ export interface AISafetyBriefing {
   actionableAdvisories: string[];
   emergencyContacts: { agency: string; number: string }[];
   lastUpdated: string;
+  source?: string;
+  isGenerated?: boolean;
 }
 
 export type ArchivedCase = SolvedArchivedCase;

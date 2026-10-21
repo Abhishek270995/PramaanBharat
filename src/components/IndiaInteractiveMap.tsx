@@ -60,6 +60,7 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
   const [mapStyle, setMapStyle] = useState<MapTileStyle>('bhuvan');
   const [mapSearch, setMapSearch] = useState<string>('');
   const [isLocating, setIsLocating] = useState<boolean>(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [riskFilter, setRiskFilter] = useState<'all' | 'High' | 'Moderate' | 'Low'>('all');
   const [showStateDropdown, setShowStateDropdown] = useState<boolean>(false);
 
@@ -324,15 +325,15 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
 
   const handleLocateMe = async () => {
     setIsLocating(true);
+    setLocationError(null);
     try {
       const res = await requestBrowserLocation(statesList);
       setIsLocating(false);
       onSelectState(res.state);
-      if (res.district) onSelectDistrict(res.district);
-    } catch {
+      onSelectDistrict(res.district || null);
+    } catch (error) {
       setIsLocating(false);
-      const defaultState = statesList.find(s => s.id === 'bihar') || statesList[0];
-      onSelectState(defaultState);
+      setLocationError(error instanceof Error ? error.message : 'Could not detect location. Please select a region manually.');
     }
   };
 
@@ -484,11 +485,12 @@ export const IndiaInteractiveMap: React.FC<IndiaInteractiveMapProps> = ({
             onClick={handleLocateMe}
             disabled={isLocating}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
-            title="Auto-detect and fly to my physical district"
+            title="Use GPS or network location to suggest a region"
           >
             <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
             <span>{isLocating ? 'Locating...' : 'Locate Me'}</span>
           </button>
+          {locationError && <span role="alert" className="text-xs text-rose-700 max-w-xs">{locationError}</span>}
 
           {/* Global Reset All India Button */}
           {selectedState && (

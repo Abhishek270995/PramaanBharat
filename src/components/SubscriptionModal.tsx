@@ -3,19 +3,15 @@ import {
   Sparkles, 
   Check, 
   X, 
-  ShieldCheck, 
   Zap, 
   Crown, 
   Lock, 
-  CreditCard, 
-  Smartphone, 
-  ArrowRight,
   BadgeCheck,
   Flame,
   Clock,
   Volume2
 } from 'lucide-react';
-import { UserSubscription, activateProSubscription, cancelProSubscription } from '../utils/subscriptionUtils';
+import { UserSubscription, cancelProSubscription } from '../utils/subscriptionUtils';
 
 interface SubscriptionModalProps {
   isOpen: boolean;
@@ -32,9 +28,6 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
 }) => {
   const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
   const [selectedPlan, setSelectedPlan] = useState<'weekly' | 'monthly' | 'annual'>('monthly');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
-  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
 
   if (!isOpen) return null;
 
@@ -96,20 +89,6 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
       ]
     }
   ];
-
-  const handleSubscribe = () => {
-    setIsProcessing(true);
-    setTimeout(() => {
-      const newSub = activateProSubscription(selectedPlan);
-      onSubscriptionChanged(newSub);
-      setIsProcessing(false);
-      setPaymentSuccess(true);
-      setTimeout(() => {
-        setPaymentSuccess(false);
-        onClose();
-      }, 2200);
-    }, 1200);
-  };
 
   const handleCancelSub = () => {
     if (confirm('Are you sure you want to cancel your Pro subscription and revert to the free 3 daily credits tier?')) {
@@ -291,87 +270,8 @@ export const SubscriptionModal: React.FC<SubscriptionModalProps> = ({
           </div>
 
           {/* Payment & Security Section */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Instant Activation & Payment Method</span>
-            </h4>
-
-            <div className="grid grid-cols-3 gap-3">
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('upi')}
-                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1 text-xs font-bold transition-all cursor-pointer ${
-                  paymentMethod === 'upi'
-                    ? 'border-blue-600 bg-blue-50/50 text-blue-800'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <Smartphone className="w-4 h-4 text-emerald-600" />
-                <span>UPI / GPay / PhonePe</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('card')}
-                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1 text-xs font-bold transition-all cursor-pointer ${
-                  paymentMethod === 'card'
-                    ? 'border-blue-600 bg-blue-50/50 text-blue-800'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <CreditCard className="w-4 h-4 text-blue-600" />
-                <span>Credit / Debit Card</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('netbanking')}
-                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1 text-xs font-bold transition-all cursor-pointer ${
-                  paymentMethod === 'netbanking'
-                    ? 'border-blue-600 bg-blue-50/50 text-blue-800'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <ShieldCheck className="w-4 h-4 text-indigo-600" />
-                <span>NetBanking / Wire</span>
-              </button>
-            </div>
-
-            {/* Action CTA */}
-            {paymentSuccess ? (
-              <div className="p-4 rounded-xl bg-emerald-600 text-white font-bold text-center text-sm flex items-center justify-center gap-2 animate-in zoom-in-95">
-                <Check className="w-5 h-5" />
-                <span>Payment Successful! Unlimited AI Quota Activated.</span>
-              </div>
-            ) : (
-              <button
-                id="activate-subscription-btn"
-                onClick={handleSubscribe}
-                disabled={isProcessing}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all cursor-pointer disabled:opacity-70"
-              >
-                {isProcessing ? (
-                  <>
-                    <Sparkles className="w-4 h-4 animate-spin" />
-                    <span>Authorizing Payment & Activating Quota...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Activate {selectedPlan.toUpperCase()} ({currency === 'INR' ? plans.find(p => p.id === selectedPlan)?.priceINR : plans.find(p => p.id === selectedPlan)?.priceUSD})</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            )}
-
-            <div className="flex items-center justify-center gap-4 text-[11px] text-slate-400">
-              <span>🔒 256-bit Encrypted</span>
-              <span>•</span>
-              <span>⚡ Instant Access</span>
-              <span>•</span>
-              <span>🔄 Cancel Anytime</span>
-            </div>
+          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-sm" role="status">
+            Planned subscription tiers only. Subscriptions are not available yet; no payment will be taken and Pro access cannot be activated from this page.
           </div>
 
         </div>

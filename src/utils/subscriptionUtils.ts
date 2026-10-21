@@ -8,15 +8,20 @@ export interface UserSubscription {
   dailyAiQuota: number;
   aiCreditsRemaining: number;
   lastResetDate: string; // YYYY-MM-DD
-  authToken?: string;
 }
 
 const STORAGE_KEY = 'pramaan_user_subscription';
 const DEFAULT_FREE_QUOTA = 3;
 
 export const getTodayDateKey = (): string => {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kolkata',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
 };
 
 export const getSubscriptionState = (): UserSubscription => {
@@ -25,15 +30,14 @@ export const getSubscriptionState = (): UserSubscription => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed: UserSubscription = JSON.parse(raw);
-      
-      // Check if pro has expired
-      if (parsed.isPro && parsed.expiresAt && Date.now() > parsed.expiresAt) {
-        parsed.isPro = false;
-        parsed.tier = 'free';
-        parsed.tierName = 'Free Citizen Tier';
-        parsed.dailyAiQuota = DEFAULT_FREE_QUOTA;
-        parsed.expiresAt = null;
-      }
+      // Old app versions could enable Pro locally without payment verification.
+      parsed.isPro = false;
+      parsed.tier = 'free';
+      parsed.tierName = 'Free Citizen Tier';
+      parsed.dailyAiQuota = DEFAULT_FREE_QUOTA;
+      parsed.expiresAt = null;
+      parsed.aiCreditsRemaining = Math.min(parsed.aiCreditsRemaining || DEFAULT_FREE_QUOTA, DEFAULT_FREE_QUOTA);
+      delete (parsed as UserSubscription & { authToken?: string }).authToken;
 
       // Reset daily quota if new day
       if (parsed.lastResetDate !== today) {
@@ -83,34 +87,6 @@ export const consumeAiCredit = (): { success: boolean; remaining: number; isPro:
   }
 
   return { success: false, remaining: 0, isPro: false };
-};
-
-export const activateProSubscription = (tier: 'weekly' | 'monthly' | 'annual'): UserSubscription => {
-  const durations: Record<string, number> = {
-    weekly: 7 * 24 * 60 * 60 * 1000,
-    monthly: 30 * 24 * 60 * 60 * 1000,
-    annual: 365 * 24 * 60 * 60 * 1000
-  };
-
-  const names: Record<string, string> = {
-    weekly: 'Pramaan Weekly Pass',
-    monthly: 'Pramaan Pro Monthly',
-    annual: 'Pramaan Champion Annual'
-  };
-
-  const newSub: UserSubscription = {
-    isPro: true,
-    tier,
-    tierName: names[tier] || 'Pramaan Pro',
-    expiresAt: Date.now() + (durations[tier] || durations.monthly),
-    dailyAiQuota: 9999,
-    aiCreditsRemaining: 9999,
-    lastResetDate: getTodayDateKey(),
-    authToken: `PRO-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-  };
-
-  saveSubscriptionState(newSub);
-  return newSub;
 };
 
 export const cancelProSubscription = (): UserSubscription => {

@@ -65,14 +65,10 @@ export const AISafetyAdvisorModal: React.FC<AISafetyAdvisorModalProps> = ({
           'x-pro-token': subscription?.authToken || ''
         },
         body: JSON.stringify({
-          stateName: selectedState?.name || 'All India',
-          districtName: selectedDistrict?.name,
-          crimeStats: {
-            reported: selectedDistrict ? selectedDistrict.reportedCrimes : selectedState ? selectedState.reportedCrimes : 368400,
-            verified: selectedDistrict ? selectedDistrict.verifiedCrimes : selectedState ? selectedState.verifiedCrimes : 342800,
-            solved: selectedDistrict ? selectedDistrict.solvedCrimes : selectedState ? selectedState.solvedCrimes : 297500,
-            primaryConcern: selectedDistrict?.primaryConcern || selectedState?.primaryConcern || 'Cyber fraud & transit safety'
-          }
+          state: selectedState?.name || 'All India',
+          district: selectedDistrict?.name,
+          timeRange: 'Current period',
+          topCrimeCategories: [selectedDistrict?.primaryConcern || selectedState?.primaryConcern || 'General safety']
         })
       });
 
@@ -85,34 +81,24 @@ export const AISafetyAdvisorModal: React.FC<AISafetyAdvisorModalProps> = ({
       }
 
       const data = await response.json();
-      if (response.ok && data.briefing) {
-        setBriefing(data.briefing);
+      if (response.ok && data.summary && Array.isArray(data.keyAdvisories)) {
+        setBriefing({
+          regionName,
+          overallRiskLevel: data.riskLevel === 'Low' ? 'Low' : data.riskLevel === 'High' ? 'High' : data.riskLevel === 'Critical Alert' ? 'Critical Alert' : 'Moderate',
+          executiveSummary: data.summary,
+          keyThreatVectors: [],
+          actionableAdvisories: data.keyAdvisories,
+          emergencyContacts: [{ agency: 'Unified Emergency Response', number: '112' }, { agency: 'National Cyber Crime Helpline', number: '1930' }],
+          lastUpdated: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' IST',
+          source: data.source,
+          isGenerated: Boolean(data.isGenerated)
+        });
       } else {
         throw new Error(data.error || 'Failed to generate briefing');
       }
     } catch (err: any) {
-      // Fallback structured intelligence
-      setBriefing({
-        regionName,
-        overallRiskLevel: selectedDistrict ? selectedDistrict.riskLevel : selectedState ? selectedState.riskLevel : 'Moderate',
-        executiveSummary: `Safety conditions across ${regionName} remain governed with enhanced surveillance across key traffic intersections and transit corridors. Cyber vigilance protocols remain active.`,
-        keyThreatVectors: [
-          'Phishing via fake electricity and telecom bill payment links',
-          'Late-night dark stretches near peripheral flyovers under maintenance',
-          'Vehicle theft in unmonitored commercial market open parking areas'
-        ],
-        actionableAdvisories: [
-          'Dial 1930 immediately within 2 hours if unauthorized UPI debit occurs to trigger bank account freeze.',
-          'Verify transit vehicles have active 112 GPS SOS stickers before boarding late night.',
-          'Ensure society CCTV feeds are linked with the local police station beat officer.'
-        ],
-        emergencyContacts: [
-          { agency: 'Unified Police Emergency', number: '112' },
-          { agency: 'National Cyber Financial Crime Reporting', number: '1930' },
-          { agency: 'State Women Helpline', number: '1090' }
-        ],
-        lastUpdated: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) + ' IST'
-      });
+      setBriefing(null);
+      setError(err instanceof Error ? err.message : 'Could not load an AI briefing. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -146,12 +132,12 @@ export const AISafetyAdvisorModal: React.FC<AISafetyAdvisorModalProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                Gemini 2.5 Intelligence Engine
+                AI generated guidance
               </span>
-              <span className="text-xs text-slate-400">Live Synthesis</span>
+              <span className="text-xs text-slate-400">No live police data</span>
             </div>
             <h3 className="text-xl font-black text-white mt-0.5">
-              AI Safety Intelligence Briefing
+              General Safety Guidance
             </h3>
           </div>
         </div>
@@ -164,9 +150,9 @@ export const AISafetyAdvisorModal: React.FC<AISafetyAdvisorModalProps> = ({
         {isLoading ? (
           <div className="py-16 text-center">
             <RefreshCw className="w-10 h-10 text-blue-400 animate-spin mx-auto mb-4" />
-            <h4 className="text-base font-bold text-white">Synthesizing Real-Time Safety Dossier...</h4>
+              <h4 className="text-base font-bold text-white">Preparing safety guidance...</h4>
             <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1">
-              Analyzing latest police FIR logs, neighborhood reports, and verified crime metrics with Gemini 2.5.
+              Generating general safety guidance. This service does not access live police or FIR records.
             </p>
           </div>
         ) : briefing ? (
@@ -188,6 +174,7 @@ export const AISafetyAdvisorModal: React.FC<AISafetyAdvisorModalProps> = ({
               <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
                 {briefing.executiveSummary}
               </p>
+              <p className="text-[11px] text-amber-300 mt-3">AI generated general guidance. This is not an official police advisory and is not based on live police records.{briefing.source ? ` Source: ${briefing.source}.` : ''}</p>
             </div>
 
             {/* Key Threat Vectors */}
@@ -260,7 +247,7 @@ export const AISafetyAdvisorModal: React.FC<AISafetyAdvisorModalProps> = ({
             </div>
 
           </div>
-        ) : null}
+        ) : error ? <p role="alert" className="text-sm text-rose-300 py-6">{error}</p> : null}
 
         <div className="flex justify-end pt-3">
           <button

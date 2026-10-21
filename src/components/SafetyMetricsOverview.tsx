@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   FileText, 
   ShieldCheck, 
@@ -61,17 +61,11 @@ export const SafetyMetricsOverview: React.FC<SafetyMetricsOverviewProps> = ({
   const config = getTimeframeMetricsConfig(timeKey, customStartDate, customEndDate);
 
   // --- REAL-TIME LIVE TELEMETRY STATE ---
-  const [liveIncidentsToday, setLiveIncidentsToday] = useState<number>(() => {
-    return selectedDistrict ? 18 : selectedState ? 142 : 1240;
-  });
-  const [liveSolvedToday, setLiveSolvedToday] = useState<number>(() => {
-    return selectedDistrict ? 14 : selectedState ? 116 : 982;
-  });
-  const [liveActiveUnits, setLiveActiveUnits] = useState<number>(418);
-  const [liveFraudHoldLakhs, setLiveFraudHoldLakhs] = useState<number>(18.4);
-  const [lastIncidentSecondsAgo, setLastIncidentSecondsAgo] = useState<number>(14);
-  const [activeDispatchIdx, setActiveDispatchIdx] = useState<number>(0);
-  const [justIncremented, setJustIncremented] = useState<boolean>(false);
+  const liveIncidentsToday = selectedDistrict ? 18 : selectedState ? 142 : 1240;
+  const liveSolvedToday = selectedDistrict ? 14 : selectedState ? 116 : 982;
+  const liveActiveUnits = 418;
+  const liveFraudHoldLakhs = 18.4;
+  const activeDispatchIdx = 0;
 
   // Real-time live emergency & crime telemetry dispatches
   const LIVE_DISPATCHES: LiveDispatchItem[] = [
@@ -117,33 +111,6 @@ export const SafetyMetricsOverview: React.FC<SafetyMetricsOverviewProps> = ({
     }
   ];
 
-  // Dynamic real-time heartbeat ticker (updates every 20-30 seconds)
-  useEffect(() => {
-    const ticker = setInterval(() => {
-      setLastIncidentSecondsAgo(prev => (prev > 45 ? 12 : prev + 6));
-      setActiveDispatchIdx(prev => (prev + 1) % LIVE_DISPATCHES.length);
-    }, 6000);
-
-    const liveIncrementTimer = setInterval(() => {
-      setLiveIncidentsToday(prev => prev + 1);
-      setJustIncremented(true);
-      setLastIncidentSecondsAgo(0);
-      setLiveFraudHoldLakhs(prev => Number((prev + (Math.random() * 0.4 + 0.1)).toFixed(1)));
-      setLiveActiveUnits(prev => Math.floor(410 + Math.random() * 20));
-
-      if (Math.random() > 0.4) {
-        setLiveSolvedToday(prev => prev + 1);
-      }
-
-      setTimeout(() => setJustIncremented(false), 2500);
-    }, 22000);
-
-    return () => {
-      clearInterval(ticker);
-      clearInterval(liveIncrementTimer);
-    };
-  }, []);
-
   // Base raw statistics depending on district, state, or national scope
   let baseReported = 368400;
 
@@ -183,15 +150,14 @@ export const SafetyMetricsOverview: React.FC<SafetyMetricsOverviewProps> = ({
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1.5">
               <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-[11px] font-bold tracking-wider uppercase border border-blue-500/30">
-                Official Crime & Safety Metrics
+                Illustrative Safety Snapshot
               </span>
               <span className="flex items-center gap-1 text-[11px] text-slate-300 bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700">
                 <Calendar className="w-3 h-3 text-blue-400" />
                 <span>{config.periodName}</span>
               </span>
               <span className="flex items-center gap-1 text-[11px] text-slate-400">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                Live Telemetry Sync
+                Sample dataset
               </span>
             </div>
 
@@ -203,6 +169,7 @@ export const SafetyMetricsOverview: React.FC<SafetyMetricsOverviewProps> = ({
             <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl">
               Tracking reported complaints, FIR verification, police chargesheet velocity, and secure archived case repositories under {config.lawFramework}.
             </p>
+            <p className="text-[11px] text-amber-300 mt-2">Illustrative sample values; not connected to official police or NCRB systems.</p>
           </div>
 
           {/* Action triggers */}
@@ -360,23 +327,18 @@ export const SafetyMetricsOverview: React.FC<SafetyMetricsOverviewProps> = ({
 
         </div>
 
-        {/* Real-Time Live Telemetry & Police Incident Stream (Auto-updating) */}
+        {/* Illustrative sample metrics and dispatch messages */}
         <div className="mt-5 p-4 rounded-2xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border border-slate-700/70 shadow-inner">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="px-2.5 py-1 rounded-full bg-rose-600/20 text-rose-400 text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 border border-rose-500/30">
                 <Radio className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
-                Live 24/7 Police Telemetry
+                Illustrative Sample Data
               </span>
 
               <span className="text-[11px] text-slate-300 flex items-center gap-1 bg-slate-800/90 px-2.5 py-1 rounded-lg border border-slate-700">
-                <Activity className="w-3 h-3 text-emerald-400 animate-bounce" />
-                <span>Today's Dispatches: <strong className="text-white">{formatNum(liveIncidentsToday)}</strong></span>
-                {justIncremented && (
-                  <span className="text-[10px] font-extrabold text-emerald-400 bg-emerald-500/20 px-1 rounded animate-fade-in">
-                    +1 live
-                  </span>
-                )}
+                <Activity className="w-3 h-3 text-emerald-400" />
+                <span>Sample dispatches: <strong className="text-white">{formatNum(liveIncidentsToday)}</strong></span>
               </span>
 
               <span className="text-[11px] text-amber-300 flex items-center gap-1 bg-amber-950/40 px-2.5 py-1 rounded-lg border border-amber-800/40">
@@ -391,8 +353,7 @@ export const SafetyMetricsOverview: React.FC<SafetyMetricsOverviewProps> = ({
             </div>
 
             <div className="flex items-center gap-2 text-[11px] text-slate-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-              <span>Last Incident: <strong className="text-slate-200">{lastIncidentSecondsAgo}s ago</strong></span>
+              <span>Illustrative sample record</span>
             </div>
           </div>
 
@@ -541,9 +502,9 @@ export const SafetyMetricsOverview: React.FC<SafetyMetricsOverviewProps> = ({
 
               {activeKpiModal === 'verified' && (
                 <div className="space-y-3">
-                  <h4 className="font-extrabold text-slate-900 text-sm">Statutory Verification Status</h4>
+                  <h4 className="font-extrabold text-slate-900 text-sm">Illustrative Verification Calculation</h4>
                   <p className="text-slate-600 leading-relaxed">
-                    Out of <strong>{formatNum(reported)}</strong> complaints registered via Dial 112, emergency police control rooms, and online lost/theft desks, <strong>{formatNum(verified)} ({verificationRate}%)</strong> have been formally substantiated and converted into official First Information Reports (FIRs) under BNS / CCTNS registries.
+                    In this sample dataset, <strong>{formatNum(verified)} ({verificationRate}%)</strong> of <strong>{formatNum(reported)}</strong> example reports are calculated as verified. These are not police, FIR, BNS, or CCTNS records.
                   </p>
                   <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900">
                     <span className="font-bold block mb-0.5">Active Inquiries in Progress:</span>
