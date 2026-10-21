@@ -17,3 +17,7 @@ https://ai.studio/apps/59f8fdfd-c71d-453a-a4ef-525edab828d4
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+## Shared API storage
+
+For consistent cache and AI quota state across serverless instances, configure an Upstash Redis database and set `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in the deployment environment. Without them, local in-memory storage is used; it is suitable for development but does not persist or coordinate across production instances. The `/api/health` response reports the active storage mode.
