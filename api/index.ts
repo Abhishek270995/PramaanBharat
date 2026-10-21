@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import { consumeQuota, getCachedValue, getQuotaUsage, setCachedValue, sharedStorageConfigured } from "./storage";
 
 dotenv.config();
 
@@ -8,114 +9,72 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(express.json());
 
-// --- IN-MEMORY CACHE (Customizable TTL) ---
-interface CacheEntry {
-  data: any;
-  timestamp: number;
-}
-const cacheStore = new Map<string, CacheEntry>();
+// Cache data and request quotas use shared Redis when configured, with in-memory
+// storage retained for local development.
 const CACHE_TTL_DEFAULT_MS = 15 * 60 * 1000; // 15 minutes default
 const CACHE_TTL_WIRE_MS = 15 * 1000; // 15 seconds for live wire feeds
 
-const getFromCache = (key: string, maxTtlMs: number = CACHE_TTL_DEFAULT_MS) => {
-  const item = cacheStore.get(key);
-  if (!item) return null;
-  if (Date.now() - item.timestamp > maxTtlMs) {
-    cacheStore.delete(key);
-    return null;
-  }
-  return item.data;
-};
-
-const setInCache = (key: string, data: any) => {
-  // Prune cache if too large
-  if (cacheStore.size > 500) {
-    const oldestKey = cacheStore.keys().next().value;
-    if (oldestKey) cacheStore.delete(oldestKey);
-  }
-  cacheStore.set(key, { data, timestamp: Date.now() });
-};
-
 // --- RATE LIMITING & ABUSE PROTECTION ---
-interface IpQuotaRecord {
-  requestsToday: number;
-  lastResetDate: string;
-  minuteBurst: number;
-  minuteReset: number;
-}
-const ipQuotaStore = new Map<string, IpQuotaRecord>();
 const FREE_DAILY_LIMIT = 3; // Keep in sync with the client-visible free quota
 const BURST_LIMIT_PER_MINUTE = 8; // Max 8 requests per minute to prevent DDOS
 const getQuotaDateKey = (date: Date) => new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit'
 }).format(date);
 
-const getClientIp = (req: Request): string => {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string') {
-    return forwarded.split(',')[0].trim();
-  }
-  return req.ip || req.socket.remoteAddress || '127.0.0.1';
+const getClientIp = (req: Request): string => req.ip || req.socket.remoteAddress || 'unknown';
+
+const getSecondsUntilIndiaMidnight = (now: number) => {
+  const indiaNow = new Date(now + 5.5 * 60 * 60 * 1000);
+  const nextMidnightUtc = Date.UTC(indiaNow.getUTCFullYear(), indiaNow.getUTCMonth(), indiaNow.getUTCDate() + 1) - 5.5 * 60 * 60 * 1000;
+  return Math.max(1, Math.ceil((nextMidnightUtc - now) / 1000));
 };
 
-const rateLimitMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const ip = getClientIp(req);
-  // Pro access must never be inferred from a client-controlled header.
-  const isPro = false;
-  const now = Date.now();
-
-  let record = ipQuotaStore.get(ip);
-  if (!record) {
-    record = {
-      requestsToday: 0,
-      lastResetDate: getQuotaDateKey(new Date(now)),
-      minuteBurst: 0,
-      minuteReset: now
-    };
-    ipQuotaStore.set(ip, record);
-  }
-
-  // Reset 1-minute burst counter
-  if (now - record.minuteReset > 60 * 1000) {
-    record.minuteBurst = 0;
-    record.minuteReset = now;
-  }
-
-  // Reset at midnight India Standard Time, matching the UI quota display.
-  const today = getQuotaDateKey(new Date(now));
-  if (today !== record.lastResetDate) {
-    record.requestsToday = 0;
-    record.lastResetDate = today;
-  }
-
-  // Check burst limit
-  record.minuteBurst += 1;
-  if (record.minuteBurst > BURST_LIMIT_PER_MINUTE) {
-    return res.status(429).json({
-      error: "Rate limit exceeded",
-      message: "Too many requests. Please wait a minute before making another AI request.",
-      retryAfterSeconds: 60
+const rateLimitMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const now = Date.now();
+    const today = getQuotaDateKey(new Date(now));
+    const quota = await consumeQuota({
+      ip: getClientIp(req),
+      today,
+      minute: Math.floor(now / 60_000),
+      secondsUntilMidnight: getSecondsUntilIndiaMidnight(now),
+      dailyLimit: FREE_DAILY_LIMIT,
+      burstLimit: BURST_LIMIT_PER_MINUTE,
     });
-  }
 
-  // Check daily limit for free users
-  if (!isPro) {
-    if (record.requestsToday >= FREE_DAILY_LIMIT) {
+    if (!quota.allowed && quota.reason === 'burst') {
+      res.setHeader('Retry-After', String(quota.retryAfterSeconds ?? 60));
+      return res.status(429).json({
+        error: "Rate limit exceeded",
+        message: "Too many requests. Please wait before making another AI request.",
+        retryAfterSeconds: quota.retryAfterSeconds ?? 60,
+      });
+    }
+    if (!quota.allowed) {
       return res.status(429).json({
         error: "Daily AI Quota Reached",
         message: "You have used today's free requests. Paid access is not available yet.",
         upgradeRequired: true,
-        remainingCredits: 0
+        remainingCredits: 0,
       });
     }
-    record.requestsToday += 1;
+
+    res.setHeader('X-RateLimit-Limit', String(FREE_DAILY_LIMIT));
+    res.setHeader('X-RateLimit-Remaining', String(quota.remaining));
+    return next();
+  } catch (error) {
+    console.error('Quota storage unavailable:', error);
+    return res.status(503).json({ error: 'AI requests are temporarily unavailable because quota storage could not be reached.' });
   }
-
-  res.setHeader('X-RateLimit-Limit', isPro ? 'Unlimited' : String(FREE_DAILY_LIMIT));
-  res.setHeader('X-RateLimit-Remaining', isPro ? '9999' : String(Math.max(0, FREE_DAILY_LIMIT - record.requestsToday)));
-
-  next();
 };
+
+const getFromCache = (key: string, ttl = CACHE_TTL_DEFAULT_MS) => getCachedValue<any>(key).catch(error => {
+  console.warn('Cache read unavailable:', error);
+  return null;
+});
+const setInCache = (key: string, data: unknown, ttl = CACHE_TTL_DEFAULT_MS) => setCachedValue(key, data, ttl).catch(error => {
+  console.warn('Cache write unavailable:', error);
+});
 
 // Initialize Gemini SDK with telemetry header
 const getGeminiClient = () => {
@@ -138,24 +97,21 @@ app.get("/api/health", (req, res) => {
     service: "Pramaan Bharat India News & Safety Hub", 
     timestamp: new Date().toISOString(),
     rateLimiterActive: true,
-    cacheActive: true
+    cacheActive: true,
+    sharedStorageConfigured,
+    storageMode: sharedStorageConfigured ? 'shared-redis' : 'instance-memory',
   });
 });
 
 // API: Check subscription status & quota
-app.get("/api/subscription/status", (req, res) => {
-  const ip = getClientIp(req);
-  const isPro = false;
-  const record = ipQuotaStore.get(ip);
-  const usedToday = record ? record.requestsToday : 0;
-  const remaining = isPro ? 9999 : Math.max(0, FREE_DAILY_LIMIT - usedToday);
-
-  res.json({
-    isPro,
-    dailyLimit: isPro ? 9999 : FREE_DAILY_LIMIT,
-    remainingCredits: remaining,
-    usedToday
-  });
+app.get("/api/subscription/status", async (req, res) => {
+  try {
+    const usedToday = await getQuotaUsage(getClientIp(req), getQuotaDateKey(new Date()));
+    res.json({ isPro: false, dailyLimit: FREE_DAILY_LIMIT, remainingCredits: Math.max(0, FREE_DAILY_LIMIT - usedToday), usedToday });
+  } catch (error) {
+    console.error('Quota status unavailable:', error);
+    res.status(503).json({ error: 'Quota status is temporarily unavailable.' });
+  }
 });
 
 // API: Generate AI Safety Briefing for a state/district and time period (Cached & Rate Limited)
@@ -165,7 +121,7 @@ app.post("/api/gemini/safety-briefing", rateLimitMiddleware, async (req, res) =>
     const cacheKey = `briefing:${state || 'all'}:${district || 'all'}:${timeRange || 'current'}`;
     
     // Check Cache first
-    const cached = getFromCache(cacheKey);
+    const cached = await getFromCache(cacheKey);
     if (cached) {
       return res.json({ ...cached, source: `${cached.source} (Verified Cache)` });
     }
@@ -186,7 +142,7 @@ app.post("/api/gemini/safety-briefing", rateLimitMiddleware, async (req, res) =>
         source: "General safety guidance (AI unavailable)",
         isGenerated: false
       };
-      setInCache(cacheKey, fallbackData);
+      await setInCache(cacheKey, fallbackData);
       return res.json({ briefing: fallbackData });
     }
 
@@ -217,7 +173,7 @@ Format your response strictly as JSON with this exact structure:
     const text = response.text || "{}";
     const data = JSON.parse(text);
     const result = { ...data, source: "AI generated general guidance", isGenerated: true };
-    setInCache(cacheKey, result);
+    await setInCache(cacheKey, result);
     return res.json({ briefing: result });
   } catch (error: any) {
     console.error("Gemini Safety Briefing Error:", error?.message || error);
@@ -231,7 +187,7 @@ app.post("/api/gemini/summarize-news", rateLimitMiddleware, async (req, res) => 
     const { title, content, source, category, state } = req.body;
     const cacheKey = `summary:${encodeURIComponent((title || '').substring(0, 60))}`;
 
-    const cached = getFromCache(cacheKey);
+    const cached = await getFromCache(cacheKey);
     if (cached) {
       return res.json(cached);
     }
@@ -248,7 +204,7 @@ app.post("/api/gemini/summarize-news", rateLimitMiddleware, async (req, res) => 
         credibilityCheck: "Verified - Matched with credible Indian wire sources (PTI/ANI)",
         keyTakeaway: `${title}: Official measures underway with public safety protocols deployed.`
       };
-      setInCache(cacheKey, fallback);
+      await setInCache(cacheKey, fallback);
       return res.json(fallback);
     }
 
@@ -275,7 +231,7 @@ Return JSON with:
     });
 
     const parsed = JSON.parse(response.text || "{}");
-    setInCache(cacheKey, parsed);
+    await setInCache(cacheKey, parsed);
     return res.json(parsed);
   } catch (error: any) {
     console.error("Gemini News Summary Error:", error);
@@ -297,7 +253,7 @@ app.post("/api/gemini/classify-report", rateLimitMiddleware, async (req, res) =>
     const { title, description, location, state, district } = req.body;
     const cacheKey = `classify:${encodeURIComponent((title || '').substring(0, 40))}:${state || ''}`;
 
-    const cached = getFromCache(cacheKey);
+    const cached = await getFromCache(cacheKey);
     if (cached) {
       return res.json(cached);
     }
@@ -312,7 +268,7 @@ app.post("/api/gemini/classify-report", rateLimitMiddleware, async (req, res) =>
         safetyAdvice: "Keep photographic records and notify your resident welfare association while police beat patrol reviews the spot.",
         isValidConcern: true
       };
-      setInCache(cacheKey, fallback);
+      await setInCache(cacheKey, fallback);
       return res.json(fallback);
     }
 
@@ -339,7 +295,7 @@ Classify into JSON:
     });
 
     const parsed = JSON.parse(response.text || "{}");
-    setInCache(cacheKey, parsed);
+    await setInCache(cacheKey, parsed);
     return res.json(parsed);
   } catch (err) {
     return res.json({
@@ -694,7 +650,7 @@ app.get("/api/news/live-wire", async (req, res) => {
     const { category, state, count = 8, searchQuery } = req.query;
     const cacheKey = `rsswire:${category || 'all'}:${state || 'all'}:${encodeURIComponent((searchQuery as string) || '')}`;
 
-    const cached = getFromCache(cacheKey, CACHE_TTL_WIRE_MS);
+    const cached = await getFromCache(cacheKey, CACHE_TTL_WIRE_MS);
     if (cached) {
       return res.json(cached);
     }
@@ -712,7 +668,7 @@ app.get("/api/news/live-wire", async (req, res) => {
       fetchedAt: new Date().toISOString()
     };
 
-    setInCache(cacheKey, result);
+    await setInCache(cacheKey, result, CACHE_TTL_WIRE_MS);
     return res.json(result);
   } catch (err: any) {
     console.error("Live Wire API Error:", err?.message || err);
@@ -726,7 +682,7 @@ app.post("/api/news/live-wire", async (req, res) => {
     const { category, state, count = 8, searchQuery } = req.body;
     const cacheKey = `rsswire:${category || 'all'}:${state || 'all'}:${encodeURIComponent((searchQuery as string) || '')}`;
 
-    const cached = getFromCache(cacheKey, CACHE_TTL_WIRE_MS);
+    const cached = await getFromCache(cacheKey, CACHE_TTL_WIRE_MS);
     if (cached) {
       return res.json(cached);
     }
@@ -744,7 +700,7 @@ app.post("/api/news/live-wire", async (req, res) => {
       fetchedAt: new Date().toISOString()
     };
 
-    setInCache(cacheKey, result);
+    await setInCache(cacheKey, result, CACHE_TTL_WIRE_MS);
     return res.json(result);
   } catch (err: any) {
     console.error("Live Wire API Error:", err?.message || err);
@@ -758,7 +714,7 @@ app.post("/api/gemini/live-news", rateLimitMiddleware, async (req, res) => {
     const { category, state, count = 6, searchQuery } = req.body;
     const cacheKey = `livenews:${category || 'all'}:${state || 'all'}:${encodeURIComponent(searchQuery || '')}`;
 
-    const cached = getFromCache(cacheKey);
+    const cached = await getFromCache(cacheKey);
     if (cached) {
       return res.json(cached);
     }
@@ -776,7 +732,7 @@ app.post("/api/gemini/live-news", rateLimitMiddleware, async (req, res) => {
       source: 'Publisher RSS feeds; articles are not independently fact-checked here'
     };
 
-    setInCache(cacheKey, finalResult);
+    await setInCache(cacheKey, finalResult);
     return res.json(finalResult);
   } catch (err: any) {
     console.error("Live News Generation Error:", err?.message || err);
