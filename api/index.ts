@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
-import { consumeQuota, getCachedValue, getQuotaUsage, setCachedValue, sharedStorageConfigured } from "./storage";
+import { consumeQuota, getCachedValue, getQuotaUsage, setCachedValue, sharedStorageConfigured } from "./storage.js";
 
 dotenv.config();
 
