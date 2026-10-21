@@ -55,9 +55,6 @@ import {
 import { 
   LocationDetectionResult 
 } from './utils/geolocationUtils';
-import { 
-  getRelevantNewsImage 
-} from './utils/imageUtils';
 
 import { 
   StateInfo, 
@@ -72,8 +69,7 @@ import {
 } from './types';
 import { INDIA_STATES_DATA } from './data/indiaGeoData';
 import { LIVE_SAFETY_ALERTS } from './data/crimeData';
-import { NEWS_ARTICLES } from './data/newsData';
-import { sortArticlesByLatest } from './utils/dateUtils';
+import { useLiveNews } from './hooks/useLiveNews';
 import { Shield, Sparkles, MapPin, Archive, MessageSquare, Newspaper, Heart, ChevronUp, Lock, CheckCircle2, X } from 'lucide-react';
 
 export default function App() {
@@ -97,10 +93,14 @@ export default function App() {
     }
   });
   const [isBookmarksView, setIsBookmarksView] = useState<boolean>(false);
-  const [allArticles, setAllArticles] = useState<NewsArticle[]>(() => sortArticlesByLatest(NEWS_ARTICLES));
-  const [isFetchingLiveNews, setIsFetchingLiveNews] = useState<boolean>(false);
   const [subscription, setSubscription] = useState<UserSubscription>(getSubscriptionState());
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState<boolean>(false);
+  const { articles: allArticles, isFetching: isFetchingLiveNews, isSyncing: isSyncingWire, lastSyncTime, fetchNews: handleFetchLiveNews, syncWire: fetchLiveWireNews } = useLiveNews({
+    category: activeCategory,
+    state: selectedState?.name,
+    onQuotaReached: () => setIsSubscriptionModalOpen(true),
+    consumeCredit: () => consumeAiCredit().success,
+  });
 
   // Followed preferences for personalized feed
   const [followedStateIds, setFollowedStateIds] = useState<string[]>(['delhi-ncr', 'maharashtra', 'karnataka']);
@@ -268,187 +268,7 @@ export default function App() {
     window.scrollTo({ top: 180, behavior: 'smooth' });
   };
 
-  // Track last live wire synchronization timestamp
-  const [lastSyncTime, setLastSyncTime] = useState<number>(Date.now());
-  const [isSyncingWire, setIsSyncingWire] = useState<boolean>(false);
-
-  // Real-time Live RSS Wire Fetcher (Backend with Cache-Control + Cache-Busted Browser Fallback)
-  const fetchLiveWireNews = async (category?: NewsCategory, state?: string) => {
-    const targetCat = category || activeCategory;
-    const targetState = state || selectedState?.name;
-    setIsSyncingWire(true);
-
-    try {
-      // 1. Try Backend Live Wire Endpoint First (with Cache-Control headers)
-      const res = await fetch(`/api/news/live-wire?_=${Date.now()}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store',
-        body: JSON.stringify({
-          category: targetCat === 'All' ? 'National' : targetCat,
-          state: targetState,
-          count: 8
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data && Array.isArray(data.articles) && data.articles.length > 0) {
-          setAllArticles(prev => {
-            const existingTitles = new Set(prev.map(a => a.title.toLowerCase().trim()));
-            const newItems = data.articles.filter((a: NewsArticle) => !existingTitles.has(a.title.toLowerCase().trim()));
-            if (newItems.length > 0) {
-              return sortArticlesByLatest([...newItems, ...prev]);
-            }
-            return prev;
-          });
-          setLastSyncTime(Date.now());
-          setIsSyncingWire(false);
-          return;
-        }
-      }
-    } catch (backendErr) {
-      console.warn('Backend wire fetch fallback notice:', backendErr);
-    }
-
-    // 2. Direct Browser-side RSS Wire Feed with Explicit Cache-Busting (CORS-friendly public fallback)
-    try {
-      const topicQuery = targetState ? encodeURIComponent(`${targetState} India`) : targetCat === 'Business' ? 'BUSINESS' : targetCat === 'Tech' ? 'TECHNOLOGY' : 'NATION';
-      const targetRss = `https://news.google.com/rss/headlines/section/topic/${topicQuery}?hl=en-IN&gl=IN&ceid=IN:en`;
-      const fallbackUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(targetRss)}&_=${Date.now()}`;
-
-      const browserRes = await fetch(fallbackUrl, { cache: 'no-store' });
-      if (browserRes.ok) {
-        const json = await browserRes.json();
-        if (json.status === 'ok' && Array.isArray(json.items) && json.items.length > 0) {
-          const mappedArticles: NewsArticle[] = json.items.map((item: any, idx: number) => {
-            let cleanTitle = (item.title || '').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
-            let source = 'Publisher not identified';
-            if (cleanTitle.includes(' - ')) {
-              const parts = cleanTitle.split(' - ');
-              source = parts[parts.length - 1].trim();
-              cleanTitle = parts.slice(0, -1).join(' - ').trim();
-            }
-
-            const publishedTimestamp = item.pubDate ? Date.parse(item.pubDate) : NaN;
-            const hasPublishedTimestamp = Number.isFinite(publishedTimestamp);
-            return {
-              id: `browser-wire-${Date.now()}-${idx + 1}`,
-              title: cleanTitle,
-              snippet: item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 220) : cleanTitle,
-              content: item.description ? item.description.replace(/<[^>]*>?/gm, '') : cleanTitle,
-              source,
-              originalUrl: item.link || 'https://news.google.com',
-              publishedAt: hasPublishedTimestamp ? new Date(publishedTimestamp).toLocaleString('en-IN') : 'Date unavailable',
-              publishedDate: hasPublishedTimestamp ? new Date(publishedTimestamp).toISOString().split('T')[0] : undefined,
-              publishedTimestamp: hasPublishedTimestamp ? publishedTimestamp : undefined,
-              category: targetCat && targetCat !== 'All' ? targetCat : 'National',
-              stateId: targetState ? targetState.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'all-india',
-              stateName: targetState || 'India',
-              imageUrl: getRelevantNewsImage(
-                cleanTitle,
-                item.thumbnail || item.enclosure?.link || (item.description && typeof item.description === 'string' ? (item.description.match(/<img[^>]+src=["']([^"']+)["']/i) || [])[1] : undefined),
-                targetCat || 'National',
-                idx
-              ),
-              readTimeMinutes: 3,
-              isBreaking: false,
-              isVerifiedFactCheck: false,
-              tags: [source, targetCat || 'National', 'RSS feed'],
-              summaryPoints: [
-                cleanTitle,
-                `Publisher listed by the RSS feed: ${source}.`,
-                `Open the linked publisher page to review details.`
-              ]
-            };
-          });
-
-          setAllArticles(prev => {
-            const existingTitles = new Set(prev.map(a => a.title.toLowerCase().trim()));
-            const newItems = mappedArticles.filter((a: NewsArticle) => !existingTitles.has(a.title.toLowerCase().trim()));
-            if (newItems.length > 0) {
-              return sortArticlesByLatest([...newItems, ...prev]);
-            }
-            return prev;
-          });
-          setLastSyncTime(Date.now());
-        }
-      }
-    } catch (browserErr) {
-      console.warn('Browser wire fetch notice:', browserErr);
-    } finally {
-      setIsSyncingWire(false);
-    }
-  };
-
-  // Root Cause 1 Resolution: Proactive 90-second scheduled background polling loop
-  useEffect(() => {
-    // Initial fetch of live wire news on application startup
-    fetchLiveWireNews();
-
-    // Proactive background wire refetch every 90 seconds (90,000 ms)
-    const wireInterval = setInterval(() => {
-      fetchLiveWireNews();
-    }, 90 * 1000);
-
-    return () => clearInterval(wireInterval);
-  }, [activeCategory, selectedState?.name]);
-
-  const handleFetchLiveNews = async (category?: NewsCategory, state?: string) => {
-    const creditCheck = consumeAiCredit();
-    if (!creditCheck.success) {
-      setIsSubscriptionModalOpen(true);
-      return;
-    }
-
-    setIsFetchingLiveNews(true);
-    try {
-      const targetCat = category || activeCategory;
-      const targetState = state || selectedState?.name;
-      const res = await fetch(`/api/gemini/live-news?_=${Date.now()}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        cache: 'no-store',
-        body: JSON.stringify({
-          category: targetCat === 'All' ? 'National' : targetCat,
-          state: targetState,
-          count: 4
-        })
-      });
-
-      if (res.status === 429) {
-        setIsSubscriptionModalOpen(true);
-        return;
-      }
-
-      if (!res.ok) {
-        // Fallback to direct wire fetch if AI endpoint fails or is throttled
-        await fetchLiveWireNews(category, state);
-        return;
-      }
-
-      const data = await res.json();
-      if (data && Array.isArray(data.articles) && data.articles.length > 0) {
-        setAllArticles(prev => {
-          const existingTitles = new Set(prev.map(a => a.title.toLowerCase().trim()));
-          const newItems = data.articles.filter((a: NewsArticle) => !existingTitles.has(a.title.toLowerCase().trim()));
-          if (newItems.length > 0) {
-            return sortArticlesByLatest([...newItems, ...prev]);
-          }
-          return prev;
-        });
-        setLastSyncTime(Date.now());
-      }
-    } catch (err) {
-      console.error('Error fetching live news:', err);
-      // Fallback to direct RSS wire fetch
-      await fetchLiveWireNews(category, state);
-    } finally {
-      setIsFetchingLiveNews(false);
-    }
-  };
+  // Feed retrieval and polling live in useLiveNews; this shell only coordinates UI state.
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900 font-sans flex flex-col selection:bg-blue-600 selection:text-white">
