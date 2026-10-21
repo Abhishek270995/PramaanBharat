@@ -156,7 +156,7 @@ export default function App() {
     }
     const regionName = result.district ? `${result.district.name}, ${result.state.name}` : result.state.name;
     setLocationToast({
-      message: 'Feed synchronized for your area',
+      message: 'Approximate region selected',
       region: regionName
     });
     setTimeout(() => {
@@ -323,27 +323,28 @@ export default function App() {
         if (json.status === 'ok' && Array.isArray(json.items) && json.items.length > 0) {
           const mappedArticles: NewsArticle[] = json.items.map((item: any, idx: number) => {
             let cleanTitle = (item.title || '').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
-            let source = 'Press Trust of India (PTI)';
+            let source = 'Publisher not identified';
             if (cleanTitle.includes(' - ')) {
               const parts = cleanTitle.split(' - ');
               source = parts[parts.length - 1].trim();
               cleanTitle = parts.slice(0, -1).join(' - ').trim();
             }
 
+            const publishedTimestamp = item.pubDate ? Date.parse(item.pubDate) : NaN;
+            const hasPublishedTimestamp = Number.isFinite(publishedTimestamp);
             return {
               id: `browser-wire-${Date.now()}-${idx + 1}`,
               title: cleanTitle,
               snippet: item.description ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 220) : cleanTitle,
-              content: `${item.description ? item.description.replace(/<[^>]*>?/gm, '') : cleanTitle}\n\nLive real-time dispatch filed by ${source} national bureau. Verified against statutory public releases.`,
+              content: item.description ? item.description.replace(/<[^>]*>?/gm, '') : cleanTitle,
               source,
-              sourceTier: 'Official Statutory & Wire',
               originalUrl: item.link || 'https://news.google.com',
-              publishedAt: 'Just now',
-              publishedDate: new Date().toISOString().split('T')[0],
-              publishedTimestamp: Date.now(),
+              publishedAt: hasPublishedTimestamp ? new Date(publishedTimestamp).toLocaleString('en-IN') : 'Date unavailable',
+              publishedDate: hasPublishedTimestamp ? new Date(publishedTimestamp).toISOString().split('T')[0] : undefined,
+              publishedTimestamp: hasPublishedTimestamp ? publishedTimestamp : undefined,
               category: targetCat && targetCat !== 'All' ? targetCat : 'National',
-              stateId: targetState ? targetState.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'delhi-ncr',
-              stateName: targetState || 'Delhi NCR',
+              stateId: targetState ? targetState.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'all-india',
+              stateName: targetState || 'India',
               imageUrl: getRelevantNewsImage(
                 cleanTitle,
                 item.thumbnail || item.enclosure?.link || (item.description && typeof item.description === 'string' ? (item.description.match(/<img[^>]+src=["']([^"']+)["']/i) || [])[1] : undefined),
@@ -351,16 +352,13 @@ export default function App() {
                 idx
               ),
               readTimeMinutes: 3,
-              isBreaking: true,
-              isVerifiedFactCheck: true,
-              credibilityRating: 'Verified Wire (PTI/ANI/LiveWire)',
-              tags: [source, targetCat || 'National', 'Live Wire'],
-              viewsCount: Math.floor(Math.random() * 6000) + 1200,
-              sharesCount: Math.floor(Math.random() * 600) + 180,
+              isBreaking: false,
+              isVerifiedFactCheck: false,
+              tags: [source, targetCat || 'National', 'RSS feed'],
               summaryPoints: [
                 cleanTitle,
-                `Live report published by ${source}.`,
-                `Continuous monitoring across national feeds.`
+                `Publisher listed by the RSS feed: ${source}.`,
+                `Open the linked publisher page to review details.`
               ]
             };
           });
@@ -409,9 +407,8 @@ export default function App() {
       const targetState = state || selectedState?.name;
       const res = await fetch(`/api/gemini/live-news?_=${Date.now()}`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-pro-token': subscription.authToken || ''
+        headers: {
+          'Content-Type': 'application/json'
         },
         cache: 'no-store',
         body: JSON.stringify({
@@ -482,7 +479,11 @@ export default function App() {
         onOpenLocationPrompt={() => setIsLocationPromptOpen(true)}
       />
 
-      {/* 2. Live Safety Alerts Real-Time Ticker */}
+      <div role="note" className="bg-amber-50 border-y border-amber-200 text-amber-950 px-4 py-2 text-xs sm:text-sm text-center">
+        Preview data notice: seeded news cards, audience counts, safety metrics, alerts, and archived cases are illustrative, not verified current reporting or an official/live police feed. RSS stories link to their publisher and are not independently fact-checked here.
+      </div>
+
+      {/* 2. Illustrative safety alerts */}
       <LiveAlertsTicker
         alerts={LIVE_SAFETY_ALERTS}
         selectedState={selectedState}
@@ -724,7 +725,7 @@ export default function App() {
                 </div>
               </div>
               <p className="text-slate-400 leading-relaxed">
-                National News Intelligence & Citizen Safety Telemetry Platform for India. Integrated with NCRB datasets, State Police Commissionerates, and verified national wire agencies.
+                Public safety and news interface prototype. Sample safety figures and archived cases are illustrative; this site is not connected to NCRB or police systems.
               </p>
             </div>
 

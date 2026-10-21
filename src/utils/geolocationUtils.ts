@@ -116,11 +116,11 @@ export async function detectUserRegion(
       if (data.locality) adminNames.push(data.locality.toLowerCase());
       if (data.city) adminNames.push(data.city.toLowerCase());
 
-      const matchedState = statesList.find(st => 
+      const matchedState = statesList.find(st => stateName && (
         stateName.includes(st.name.toLowerCase()) || 
         st.name.toLowerCase().includes(stateName) ||
         (st.hindiName && stateName.includes(st.hindiName.toLowerCase()))
-      );
+      ));
 
       if (matchedState && matchedState.districts) {
         // Find if any admin name matches a district in this state
@@ -141,7 +141,7 @@ export async function detectUserRegion(
 
         return {
           state: matchedState,
-          district: matchedDistrict || matchedState.districts[0],
+          district: matchedDistrict,
           source: 'reverse-geocode',
           cityName: matchedDistrict?.name || data.locality || data.city
         };
@@ -177,10 +177,10 @@ export async function detectUserRegion(
         addr.municipality
       ].filter(Boolean).map((s: string) => s.toLowerCase());
 
-      const matchedState = statesList.find(st => 
+      const matchedState = statesList.find(st => stateName && (
         stateName.includes(st.name.toLowerCase()) || 
         st.name.toLowerCase().includes(stateName)
-      );
+      ));
 
       if (matchedState && matchedState.districts) {
         let matchedDistrict: DistrictInfo | undefined;
@@ -194,7 +194,7 @@ export async function detectUserRegion(
 
         return {
           state: matchedState,
-          district: matchedDistrict || matchedState.districts[0],
+          district: matchedDistrict,
           source: 'reverse-geocode',
           cityName: matchedDistrict?.name || addr.city || addr.town || addr.county
         };
@@ -205,6 +205,9 @@ export async function detectUserRegion(
   }
 
   // 4. Return closest geometric district
+  if (!geoResult.state || geoResult.distanceKm >= 75) {
+    throw new Error('Could not match this location to a known Indian district. Please choose your region manually.');
+  }
   return {
     state: geoResult.state,
     district: geoResult.district,
@@ -241,20 +244,14 @@ export async function detectLocationByIP(statesList: StateInfo[]): Promise<Locat
     // fallback
   }
 
-  const defaultState = statesList.find(s => s.id === 'bihar') || statesList[0];
-  return {
-    state: defaultState,
-    district: defaultState.districts?.[0],
-    source: 'ip-fallback',
-    cityName: defaultState.districts?.[0]?.name
-  };
+  throw new Error('Location could not be detected. Please choose your region manually.');
 }
 
 /**
  * Requests browser GPS location with fallback to IP detection and saves to localStorage
  */
 export function requestBrowserLocation(statesList: StateInfo[]): Promise<LocationDetectionResult> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       detectLocationByIP(statesList).then(resolve);
       return;
@@ -277,13 +274,7 @@ export function requestBrowserLocation(statesList: StateInfo[]): Promise<Locatio
           }
           resolve(result);
         } catch {
-          const fallback = findClosestDistrict(pos.coords.latitude, pos.coords.longitude, statesList);
-          resolve({
-            state: fallback.state,
-            district: fallback.district,
-            source: 'browser-gps',
-            cityName: fallback.district?.name
-          });
+          reject(new Error('Location could not be matched. Please choose your region manually.'));
         }
       },
       async (err) => {
@@ -291,9 +282,8 @@ export function requestBrowserLocation(statesList: StateInfo[]): Promise<Locatio
         try {
           const ipResult = await detectLocationByIP(statesList);
           resolve(ipResult);
-        } catch {
-          const def = statesList.find(s => s.id === 'bihar') || statesList[0];
-          resolve({ state: def, district: def.districts?.[0], source: 'ip-fallback', cityName: def.districts?.[0]?.name });
+        } catch (fallbackError) {
+          reject(fallbackError);
         }
       },
       {

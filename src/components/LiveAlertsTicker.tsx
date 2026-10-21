@@ -122,7 +122,7 @@ export const LiveAlertsTicker: React.FC<LiveAlertsTickerProps> = ({
           border: 'border-rose-700',
           hoverBorder: 'hover:border-rose-500',
           icon: <AlertCircle className="w-3.5 h-3.5 animate-pulse" />,
-          label: 'CRITICAL SAFETY ALERT'
+          label: 'SAMPLE • CRITICAL ALERT'
         };
       case 'Warning':
         return {
@@ -131,7 +131,7 @@ export const LiveAlertsTicker: React.FC<LiveAlertsTickerProps> = ({
           border: 'border-amber-600',
           hoverBorder: 'hover:border-amber-500',
           icon: <AlertTriangle className="w-3.5 h-3.5" />,
-          label: 'HIGH ALERT ADVISORY'
+          label: 'SAMPLE • HIGH ALERT'
         };
       default:
         return {
@@ -140,7 +140,7 @@ export const LiveAlertsTicker: React.FC<LiveAlertsTickerProps> = ({
           border: 'border-blue-700',
           hoverBorder: 'hover:border-blue-500',
           icon: <Info className="w-3.5 h-3.5" />,
-          label: 'POLICE ADVISORY'
+          label: 'SAMPLE • POLICE ADVISORY'
         };
     }
   };

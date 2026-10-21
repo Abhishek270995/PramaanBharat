@@ -201,9 +201,9 @@ export const ArticleModal: React.FC<ArticleModalProps> = ({
             </span>
           )}
 
-          <span className="text-xs text-slate-400 ml-auto flex items-center gap-1">
+          {typeof article.viewsCount === 'number' && <span className="text-xs text-slate-400 ml-auto flex items-center gap-1">
             <Eye className="w-3.5 h-3.5" /> {article.viewsCount.toLocaleString('en-IN')} readers
-          </span>
+          </span>}
         </div>
 
         {/* Hero Image */}

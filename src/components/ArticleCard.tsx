@@ -211,9 +211,9 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
           <span className="flex items-center gap-1">
             <Clock className="w-3 h-3" /> {article.readTimeMinutes} min read
           </span>
-          <span className="flex items-center gap-1 hidden sm:flex">
+          {typeof article.viewsCount === 'number' && <span className="flex items-center gap-1 hidden sm:flex">
             <Eye className="w-3 h-3" /> {article.viewsCount.toLocaleString('en-IN')}
-          </span>
+          </span>}
         </div>
 
         <div className="flex items-center gap-1.5">
